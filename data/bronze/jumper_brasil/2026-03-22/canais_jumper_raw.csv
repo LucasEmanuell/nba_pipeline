@@ -1,0 +1,293 @@
+data_br,visitante,mandante,horario_br,canal_br
+05/10/25,Los Angeles Lakers,Golden State Warriors,21h30,ESPN 2
+12/10/25,Cleveland Cavaliers,Boston Celtics,20h,ESPN 2
+12/10/25,Denver Nuggets,Los Angeles Clippers,22h30,ESPN 2
+15/10/25,Dallas Mavericks,Los Angeles Lakers,23h30,ESPN 2
+16/10/25,Houston Rockets,Atlanta Hawks,20h30,ESPN 2
+21/10/25,Houston Rockets,Oklahoma City Thunder,20h30,Amazon Prime Video
+21/10/25,Golden State Warriors,Los Angeles Lakers,23h,ESPN 2 / Disney+
+22/10/25,Cleveland Cavaliers,New York Knicks,20h,ESPN 2
+22/10/25,San Antonio Spurs,Dallas Mavericks,22h30,ESPN 2
+23/10/25,Oklahoma City Thunder,Indiana Pacers,20h30,ESPN 2
+23/10/25,Denver Nuggets,Golden State Warriors,23h,ESPN 2
+24/10/25,Boston Celtics,New York Knicks,20h30,Amazon Prime Video
+24/10/25,Minnesota Timberwolves,Los Angeles Lakers,23h,Amazon Prime Video
+25/10/25,Oklahoma City Thunder,Atlanta Hawks,20h30,ESPN 2 / Disney+
+26/10/25,Milwaukee Bucks,Cleveland Cavaliers,19h,Amazon Prime Video
+26/10/25,Los Angeles Lakers,Sacramento Kings,22h,Amazon Prime Video
+27/10/25,Cleveland Cavaliers,Detroit Pistons,20h,ESPN 2 / Disney+
+27/10/25,Denver Nuggets,Minnesota Timberwolves,22h30,ESPN 2 / Disney+
+28/10/25,New York Knicks,Milwaukee Bucks,21h,Amazon Prime Video
+28/10/25,Los Angeles Clippers,Golden State Warriors,0h,Amazon Prime Video
+29/10/25,Cleveland Cavaliers,Boston Celtics,20h,ESPN 2
+29/10/25,Los Angeles Lakers,Minnesota Timberwolves,22h30,ESPN 2
+30/10/25,Miami Heat,San Antonio Spurs,21h30,Amazon Prime Video
+31/10/25,Boston Celtics,Philadelphia 76ers,20h,Amazon Prime Video
+31/10/25,Los Angeles Lakers,Memphis Grizzlies,22h30,Amazon Prime Video
+01/11/25,Sacramento Kings,Milwaukee Bucks,18h,ESPN 2 / Disney+
+01/11/25,Houston Rockets,Boston Celtics,21h,ESPN 2 / Disney+
+01/11/25,Dallas Mavericks,Detroit Pistons,23h,ESPN 2
+02/11/25,Miami Heat,Los Angeles Lakers,23h30,Amazon Prime Video
+03/11/25,Minnesota Timberwolves,Brooklyn Nets,21h,ESPN 2 / Disney+
+03/11/25,Miami Heat,Los Angeles Clippers,0h30,Amazon Prime Video
+04/11/25,Orlando Magic,Atlanta Hawks,22h,Amazon Prime Video
+04/11/25,Oklahoma City Thunder,Los Angeles Clippers,1h,Amazon Prime Video
+05/11/25,Minnesota Timberwolves,New York Knicks,21h30,ESPN 2
+05/11/25,San Antonio Spurs,Los Angeles Lakers,0h,ESPN 2
+07/11/25,Houston Rockets,San Antonio Spurs,21h30,Amazon Prime Video
+07/11/25,Golden State Warriors,Denver Nuggets,0h,Amazon Prime Video
+08/11/25,Los Angeles Lakers,Atlanta Hawks,22h,ESPN 2 / Disney+
+08/11/25,Phoenix Suns,Los Angeles Clippers,0h30,ESPN 2
+09/11/25,Boston Celtics,Orlando Magic,20h,Amazon Prime Video
+09/11/25,Indiana Pacers,Golden State Warriors,22h30,Amazon Prime Video
+10/11/25,Washington Wizards,Detroit Pistons,21h,ESPN 2 / Disney+
+11/11/25,Golden State Warriors,Oklahoma City Thunder,22h,Amazon Prime Video
+11/11/25,Denver Nuggets,Sacramento Kings,1h,Amazon Prime Video
+12/11/25,Orlando Magic,New York Knicks,21h,ESPN 2
+12/11/25,Los Angeles Lakers,Oklahoma City Thunder,23h30,ESPN 2
+13/11/25,Indiana Pacers,Phoenix Suns,23h,Amazon Prime Video
+14/11/25,Miami Heat,New York Knicks,21h,Amazon Prime Video
+14/11/25,Golden State Warriors,San Antonio Spurs,23h30,Amazon Prime Video
+15/11/25,Memphis Grizzlies,Cleveland Cavaliers,19h,ESPN 2 / Disney+
+15/11/25,Los Angeles Lakers,Milwaukee Bucks,22h,ESPN 2 / Disney+
+16/11/25,Orlando Magic,Houston Rockets,21h,Amazon Prime Video
+17/11/25,Milwaukee Bucks,Cleveland Cavaliers,21h,ESPN 2 / Disney+
+18/11/25,Golden State Warriors,Orlando Magic,21h,Amazon Prime Video
+18/11/25,Utah Jazz,Los Angeles Lakers,0h30,Amazon Prime Video
+19/11/25,Golden State Warriors,Miami Heat,21h,ESPN 2
+19/11/25,New York Knicks,Dallas Mavericks,23h30,ESPN 2
+20/11/25,Philadelphia 76ers,Milwaukee Bucks,22h,Amazon Prime Video
+21/11/25,Indiana Pacers,Cleveland Cavaliers,21h,Amazon Prime Video
+21/11/25,Denver Nuggets,Houston Rockets,23h30,Amazon Prime Video
+22/11/25,New York Knicks,Orlando Magic,19h,ESPN 2 / Disney+
+22/11/25,Memphis Grizzlies,Dallas Mavericks,22h30,ESPN 2 / Disney+
+23/11/25,Orlando Magic,Boston Celtics,20h,Amazon Prime Video
+24/11/25,Cleveland Cavaliers,Toronto Raptors,21h,ESPN 2 / Disney+
+24/11/25,Houston Rockets,Phoenix Suns,23h30,ESPN 2 / Disney+
+25/11/25,Orlando Magic,Philadelphia 76ers,22h,Amazon Prime Video
+25/11/25,Los Angeles Clippers,Los Angeles Lakers,1h,Amazon Prime Video
+26/11/25,Detroit Pistons,Boston Celtics,19h,ESPN 2
+26/11/25,Minnesota Timberwolves,Oklahoma City Thunder,21h30,ESPN 2
+26/11/25,Houston Rockets,Golden State Warriors,0h,ESPN 2
+28/11/25,Milwaukee Bucks,New York Knicks,21h30,Amazon Prime Video
+28/11/25,Dallas Mavericks,Los Angeles Lakers,0h,Amazon Prime Video
+29/11/25,Chicago Bulls,Indiana Pacers,21h30,ESPN 2 / Disney+
+29/11/25,Dallas Mavericks,Los Angeles Clippers,0h,ESPN 2 / Disney+
+30/11/25,Boston Celtics,Cleveland Cavaliers,20h,Amazon Prime Video
+30/11/25,New Orleans Pelicans,Los Angeles Lakers,23h30,Amazon Prime Video
+01/12/25,Chicago Bulls,Orlando Magic,21h30,ESPN 2 / Disney+
+01/12/25,Phoenix Suns,Los Angeles Lakers,0h,ESPN 2 / Disney+
+02/12/25,New York Knicks,Boston Celtics,22h,Amazon Prime Video
+02/12/25,Oklahoma City Thunder,Golden State Warriors,1h,Amazon Prime Video
+03/12/25,San Antonio Spurs,Orlando Magic,21h,ESPN 2
+04/12/25,Los Angeles Lakers,Toronto Raptors,21h30,Amazon Prime Video
+05/12/25,Los Angeles Lakers,Boston Celtics,21h,Amazon Prime Video
+05/12/25,Dallas Mavericks,Oklahoma City Thunder,23h30,Amazon Prime Video
+06/12/25,New Orleans Pelicans,Brooklyn Nets,19h,ESPN 2 / Disney+
+06/12/25,Houston Rockets,Dallas Mavericks,22h30,ESPN 2 / Disney+
+07/12/25,Orlando Magic,New York Knicks,14h,Amazon Prime Video
+07/12/25,Los Angeles Lakers,Philadelphia 76ers,21h30,Amazon Prime Video
+08/12/25,Sacramento Kings,Indiana Pacers,21h,ESPN 2 / Disney+
+08/12/25,San Antonio Spurs,New Orleans Pelicans,23h30,ESPN 2 / Disney+
+17/12/25,Los Angeles Clippers,Oklahoma City Thunder,22h,ESPN 2
+18/12/25,Golden State Warriors,Phoenix Suns,23h,Amazon Prime Video
+19/12/25,Philadelphia 76ers,New York Knicks,21h,Amazon Prime Video
+19/12/25,Oklahoma City Thunder,Minnesota Timberwolves,23h30,Amazon Prime Video
+20/12/25,Dallas Mavericks,Philadelphia 76ers,21h,ESPN 2 / Disney+
+20/12/25,Los Angeles Lakers,Los Angeles Clippers,0h30,ESPN 2 / Disney+
+21/12/25,Miami Heat,New York Knicks,20h,Amazon Prime Video
+21/12/25,Houston Rockets,Sacramento Kings,0h,Amazon Prime Video
+22/12/25,Charlotte Hornets,Cleveland Cavaliers,21h,ESPN 2 / Disney+
+22/12/25,Memphis Grizzlies,Oklahoma City Thunder,23h30,ESPN 2 / Disney+
+23/12/25,Denver Nuggets,Dallas Mavericks,22h,Amazon Prime Video
+23/12/25,Houston Rockets,Los Angeles Clippers,1h,Amazon Prime Video
+25/12/25,Cleveland Cavaliers,New York Knicks,14h,ESPN 2
+25/12/25,San Antonio Spurs,Oklahoma City Thunder,16h30,ESPN 2
+25/12/25,Dallas Mavericks,Golden State Warriors,19h,ESPN 2
+25/12/25,Houston Rockets,Los Angeles Lakers,22h,ESPN 2
+25/12/25,Minnesota Timberwolves,Denver Nuggets,0h30,ESPN 2
+26/12/25,Boston Celtics,Indiana Pacers,21h30,Amazon Prime Video
+26/12/25,Los Angeles Clippers,Portland Trail Blazers,0h,Amazon Prime Video
+27/12/25,Dallas Mavericks,Sacramento Kings,19h,ESPN 2 / Disney+
+27/12/25,Utah Jazz,San Antonio Spurs,22h,ESPN 2 / Disney+
+28/12/25,Boston Celtics,Portland Trail Blazers,20h,Amazon Prime Video
+28/12/25,Sacramento Kings,Los Angeles Lakers,23h30,Amazon Prime Video
+29/12/25,Cleveland Cavaliers,San Antonio Spurs,22h,ESPN 2 / Disney+
+29/12/25,Dallas Mavericks,Portland Trail Blazers,1h,ESPN 2 / Disney+
+30/12/25,Philadelphia 76ers,Memphis Grizzlies,22h,Amazon Prime Video
+30/12/25,Detroit Pistons,Los Angeles Lakers,0h30,Amazon Prime Video
+31/12/25,Golden State Warriors,Charlotte Hornets,15h,ESPN 2
+01/01/26,Philadelphia 76ers,Dallas Mavericks,22h30,Amazon Prime Video
+02/01/26,Atlanta Hawks,New York Knicks,21h30,Amazon Prime Video
+02/01/26,Oklahoma City Thunder,Golden State Warriors,0h,Amazon Prime Video
+03/01/26,Minnesota Timberwolves,Miami Heat,19h,ESPN 2 / Disney+
+03/01/26,Portland Trail Blazers,San Antonio Spurs,22h,ESPN 2 / Disney+
+04/01/26,New Orleans Pelicans,Miami Heat,20h,Amazon Prime Video
+04/01/26,Memphis Grizzlies,Los Angeles Lakers,23h30,Amazon Prime Video
+05/01/26,New York Knicks,Detroit Pistons,21h,ESPN 2 / Disney+
+05/01/26,Golden State Warriors,Los Angeles Clippers,0h,ESPN 2 / Disney+
+06/01/26,Miami Heat,Minnesota Timberwolves,22h,Amazon Prime Video
+06/01/26,Dallas Mavericks,Sacramento Kings,1h,Amazon Prime Video
+07/01/26,Los Angeles Lakers,San Antonio Spurs,21h30,ESPN 2
+07/01/26,Milwaukee Bucks,Golden State Warriors,0h,ESPN 2
+08/01/26,Cleveland Cavaliers,Minnesota Timberwolves,22h,Amazon Prime Video
+09/01/26,Sacramento Kings,Golden State Warriors,0h,Amazon Prime Video
+10/01/26,Minnesota Timberwolves,Cleveland Cavaliers,15h,Amazon Prime Video
+10/01/26,San Antonio Spurs,Boston Celtics,22h,ESPN 2 / Disney+
+11/01/26,New York Knicks,Portland Trail Blazers,20h,Amazon Prime Video
+11/01/26,Atlanta Hawks,Golden State Warriors,22h30,Amazon Prime Video
+12/01/26,Boston Celtics,Indiana Pacers,21h30,ESPN 2 / Disney+
+12/01/26,Los Angeles Lakers,Sacramento Kings,0h,ESPN 2 / Disney+
+13/01/26,Minnesota Timberwolves,Milwaukee Bucks,22h,Amazon Prime Video
+13/01/26,Portland Trail Blazers,Golden State Warriors,1h,Amazon Prime Video
+14/01/26,Cleveland Cavaliers,Philadelphia 76ers,21h,ESPN 2
+14/01/26,Denver Nuggets,Dallas Mavericks,23h30,ESPN 2
+15/01/26,Memphis Grizzlies,Orlando Magic,16h,Amazon Prime Video
+15/01/26,Oklahoma City Thunder,Houston Rockets,21h30,Amazon Prime Video
+15/01/26,New York Knicks,Golden State Warriors,0h,Amazon Prime Video
+16/01/26,Chicago Bulls,Brooklyn Nets,21h,ESPN 2
+16/01/26,Minnesota Timberwolves,Houston Rockets,23h30,ESPN 2
+17/01/26,Utah Jazz,Dallas Mavericks,19h,ESPN 2 / Disney+
+17/01/26,Phoenix Suns,New York Knicks,21h30,ESPN 2 / Disney+
+18/01/26,Orlando Magic,Memphis Grizzlies,14h,Amazon Prime Video
+18/01/26,Toronto Raptors,Los Angeles Lakers,23h30,Amazon Prime Video
+19/01/26,Oklahoma City Thunder,Cleveland Cavaliers,16h30,ESPN 2 / Disney+
+19/01/26,Dallas Mavericks,New York Knicks,19h,ESPN 2 / Disney+
+19/01/26,Boston Celtics,Detroit Pistons,22h,ESPN 2 / Disney+
+20/01/26,San Antonio Spurs,Houston Rockets,22h,Amazon Prime Video
+20/01/26,Los Angeles Lakers,Denver Nuggets,0h,Amazon Prime Video
+21/01/26,Cleveland Cavaliers,Charlotte Hornets,21h,ESPN 2
+21/01/26,Oklahoma City Thunder,Milwaukee Bucks,23h30,ESPN 2
+22/01/26,Golden State Warriors,Dallas Mavericks,21h30,Amazon Prime Video
+22/01/26,Los Angeles Lakers,Los Angeles Clippers,21h,Amazon Prime Video
+23/01/26,Houston Rockets,Detroit Pistons,21h,Amazon Prime Video
+23/01/26,Indiana Pacers,Oklahoma City Thunder,23h30,Amazon Prime Video
+24/01/26,New York Knicks,Philadelphia 76ers,17h,ESPN 2
+24/01/26,Golden State Warriors,Minnesota Timberwolves,19h30,ESPN 2
+24/01/26,Los Angeles Lakers,Dallas Mavericks,22h30,ESPN 2
+25/01/26,Dallas Mavericks,Milwaukee Bucks,21h,Amazon Prime Video
+26/01/26,Orlando Magic,Cleveland Cavaliers,21h,ESPN 2 / Disney+
+26/01/26,Golden State Warriors,Minnesota Timberwolves,23h30,ESPN 2 / Disney+
+27/01/26,Milwaukee Bucks,Philadelphia 76ers,22h,Amazon Prime Video
+27/01/26,Los Angeles Clippers,Utah Jazz,0h,Amazon Prime Video
+28/01/26,Los Angeles Lakers,Cleveland Cavaliers,21h,ESPN 2
+28/01/26,San Antonio Spurs,Houston Rockets,23h30,ESPN 2
+29/01/26,Milwaukee Bucks,Washington Wizards,21h,Amazon Prime Video
+29/01/26,Oklahoma City Thunder,Minnesota Timberwolves,23h30,Amazon Prime Video
+30/01/26,Memphis Grizzlies,New Orleans Pelicans,21h30,ESPN 2
+30/01/26,Los Angeles Clippers,Denver Nuggets,0h,ESPN 2
+31/01/26,San Antonio Spurs,Charlotte Hornets,17h,Amazon Prime Video
+31/01/26,Dallas Mavericks,Houston Rockets,22h30,ESPN 2
+01/02/26,Milwaukee Bucks,Boston Celtics,17h30,ESPN 2
+02/02/26,Houston Rockets,Indiana Pacers,21h,ESPN 2 / Disney+
+02/02/26,Minnesota Timberwolves,Memphis Grizzlies,23h30,ESPN 2 / Disney+
+03/02/26,Boston Celtics,Dallas Mavericks,22h,Amazon Prime Video
+03/02/26,Phoenix Suns,Portland Trail Blazers,1h,Amazon Prime Video
+04/02/26,Oklahoma City Thunder,San Antonio Spurs,23h30,ESPN 2
+05/02/06,Chicago Bulls,Toronto Raptors,21h30,Amazon Prime Video
+05/02/06,Philadelphia 76ers,Los Angeles Lakers,0h,Amazon Prime Video
+06/02/26,New York Knicks,Detroit Pistons,21h30,Amazon Prime Video
+06/02/26,Los Angeles Clippers,Sacramento Kings,0h,Amazon Prime Video
+07/02/26,Houston Rockets,Oklahoma City Thunder,17h30,ESPN 2
+07/02/26,Dallas Mavericks,San Antonio Spurs,20h,Amazon Prime Video
+07/02/26,Golden State Warriors,Los Angeles Lakers,22h30,ESPN 2
+08/02/26,New York Knicks,Boston Celtics,14h30,ESPN 2
+08/02/26,Los Angeles Clippers,Minnesota Timberwolves,17h,ESPN 2
+09/02/26,Milwaukee Bucks,Orlando Magic,21h30,ESPN 2 / Disney+
+09/02/26,Oklahoma City Thunder,Los Angeles Lakers,0h,ESPN 2 / Disney+
+10/02/26,Indiana Pacers,New York Knicks,21h30,Amazon Prime Video
+11/02/26,New York Knicks,Philadelphia 76ers,21h30,ESPN 2
+11/02/26,Memphis Grizzlies,Denver Nuggets,0h,ESPN 2
+12/02/26,Milwaukee Bucks,Oklahoma City Thunder,21h30,Amazon Prime Video
+12/02/26,Dallas Mavericks,Los Angeles Lakers,0h,Amazon Prime Video
+19/02/06,Detroit Pistons,New York Knicks,21h30,Amazon Prime Video
+19/02/06,Boston Celtics,Golden State Warriors,0h,Amazon Prime Video
+20/02/26,Dallas Mavericks,Minnesota Timberwolves,21h30,ESPN 2
+20/02/26,Los Angeles Clippers,Los Angeles Lakers,0h,ESPN 2
+21/02/26,Houston Rockets,New York Knicks,22h30,ESPN 2
+22/02/26,Cleveland Cavaliers,Oklahoma City Thunder,15h,ESPN 2
+22/02/26,Denver Nuggets,Golden State Warriors,17h30,ESPN 2
+23/02/26,San Antonio Spurs,Detroit Pistons,21h,ESPN 2 / Disney+
+23/02/26,Utah Jazz,Houston Rockets,23h30,ESPN 2 / Disney+
+24/02/26,New York Knicks,Cleveland Cavaliers,22h,Amazon Prime Video
+24/02/26,Orlando Magic,Los Angeles Lakers,0h30,Amazon Prime Video
+25/02/26,Golden State Warriors,Memphis Grizzlies,21h30,ESPN 2
+25/02/26,Boston Celtics,Denver Nuggets,0h,ESPN 2
+26/02/26,Houston Rockets,Orlando Magic,21h30,Amazon Prime Video
+26/02/26,Minnesota Timberwolves,Los Angeles Clippers,0h,Amazon Prime Video
+27/02/26,Cleveland Cavaliers,Detroit Pistons,21h,ESPN 2
+27/02/26,Denver Nuggets,Oklahoma City Thunder,23h30,ESPN 2
+28/02/26,Houston Rockets,Miami Heat,17h,Amazon Prime Video
+28/02/26,Los Angeles Lakers,Golden State Warriors,22h30,ESPN 2
+01/03/26,San Antonio Spurs,New York Knicks,15h,ESPN 2
+01/03/26,Minnesota Timberwolves,Denver Nuggets,17h30,ESPN 2
+02/03/26,Boston Celtics,Milwaukee Bucks,21h30,ESPN 2 / Disney+
+02/03/26,Los Angeles Clippers,Golden State Warriors,0h,ESPN 2 / Disney+
+03/03/26,San Antonio Spurs,Philadelphia 76ers,22h,Amazon Prime Video
+03/03/26,Phoenix Suns,Sacramento Kings,1h,Amazon Prime Video
+04/03/26,Oklahoma City Thunder,New York Knicks,21h,ESPN 2
+04/03/26,Atlanta Hawks,Milwaukee Bucks,23h30,ESPN 2
+05/03/26,Golden State Warriors,Houston Rockets,21h30,Amazon Prime Video
+05/03/26,Los Angeles Lakers,Denver Nuggets,0h,Amazon Prime Video
+06/03/26,Dallas Mavericks,Boston Celtics,21h,ESPN 2
+06/03/26,Los Angeles Clippers,San Antonio Spurs,23h30,ESPN 2
+07/03/26,Orlando Magic,Minnesota Timberwolves,17h,Amazon Prime Video
+07/03/26,Golden State Warriors,Oklahoma City Thunder,22h30,ESPN 2
+08/03/26,Boston Celtics,Cleveland Cavaliers,14h,ESPN 2
+08/03/26,New York Knicks,Los Angeles Lakers,16h30,ESPN 2
+09/03/26,Denver Nuggets,Oklahoma City Thunder,20h30,ESPN 2 / Disney+
+09/03/26,New York Knicks,Los Angeles Clippers,23h,ESPN 2 / Disney+
+10/03/26,Boston Celtics,San Antonio Spurs,21h,Amazon Prime Video
+10/03/26,Minnesota Timberwolves,Los Angeles Lakers,0h,Amazon Prime Video
+11/03/26,Cleveland Cavaliers,Orlando Magic,20h30,ESPN 2
+11/03/26,Houston Rockets,Denver Nuggets,23h,ESPN 2
+12/03/26,Philadelphia 76ers,Detroit Pistons,20h,Amazon Prime Video
+12/03/26,Boston Celtics,Oklahoma City Thunder,22h30,Amazon Prime Video
+13/03/26,New York Knicks,Indiana Pacers,20h30,Amazon Prime Video
+13/03/26,Minnesota Timberwolves,Golden State Warriors,23h,Amazon Prime Video
+14/03/26,Milwaukee Bucks,Atlanta Hawks,16h,Amazon Prime Video
+14/03/26,Denver Nuggets,Los Angeles Lakers,21h30,ESPN 2
+14/03/26,Sacramento Kings,Los Angeles Clippers,23h30,ESPN 2
+15/03/26,Minnesota Timberwolves,Oklahoma City Thunder,14h,ESPN 2
+16/03/26,Orlando Magic,Atlanta Hawks,20h,ESPN 2 / Disney+
+16/03/26,Los Angeles Lakers,Houston Rockets,22h,ESPN 2 / Disney+
+17/03/26,Cleveland Cavaliers,Milwaukee Bucks,21h,Amazon Prime Video
+17/03/26,San Antonio Spurs,Sacramento Kings,0h,Amazon Prime Video
+18/03/26,Golden State Warriors,Boston Celtics,20h,ESPN 2
+18/03/26,Los Angeles Lakers,Houston Rockets,22h30,ESPN 2
+19/03/26,Los Angeles Lakers,Miami Heat,21h,Amazon Prime Video
+20/03/26,Boston Celtics,Memphis Grizzlies,21h,Amazon Prime Video
+21/03/26,Los Angeles Lakers,Orlando Magic,20h,ESPN 2 / Disney+
+21/03/26,Milwaukee Bucks,Phoenix Suns,23h,ESPN 2 / Disney+
+23/03/26,Memphis Grizzlies,Atlanta Hawks,20h,ESPN 2 / Disney+
+23/03/26,Golden State Warriors,Dallas Mavericks,22h30,ESPN 2 / Disney+
+24/03/26,Orlando Magic,Cleveland Cavaliers,21h,Amazon Prime Video
+24/03/26,Denver Nuggets,Phoenix Suns,0h,Amazon Prime Video
+25/03/26,Atlanta Hawks,Detroit Pistons,20h,ESPN 2
+25/03/26,Houston Rockets,Minnesota Timberwolves,22h30,ESPN 2
+26/03/26,Sacramento Kings,Orlando Magic,20h,Amazon Prime Video
+27/03/26,Miami Heat,Cleveland Cavaliers,20h30,Amazon Prime Video
+27/03/26,Brooklyn Nets,Los Angeles Lakers,23h30,Amazon Prime Video
+28/03/26,San Antonio Spurs,Milwaukee Bucks,16h,Amazon Prime Video
+28/03/26,Philadelphia 76ers,Charlotte Hornets,19h,ESPN 2 / Disney+
+28/03/26,Utah Jazz,Phoenix Suns,23h,ESPN 2 / Disney+
+30/03/26,Philadelphia 76ers,Miami Heat,20h,ESPN 2 / Disney+
+30/03/26,Detroit Pistons,Oklahoma City Thunder,22h30,ESPN 2 / Disney+
+31/03/26,New York Knicks,Houston Rockets,21h,Amazon Prime Video
+31/03/26,Cleveland Cavaliers,Los Angeles Lakers,23h30,Amazon Prime Video
+01/04/26,Atlanta Hawks,Orlando Magic,20h30,ESPN 2
+01/04/26,San Antonio Spurs,Golden State Warriors,23h,ESPN 2
+02/04/26,Los Angeles Lakers,Oklahoma City Thunder,20h30,Amazon Prime Video
+02/04/26,Cleveland Cavaliers,Golden State Warriors,23h,Amazon Prime Video
+03/04/26,Boston Celtics,Milwaukee Bucks,21h,Amazon Prime Video
+04/04/26,San Antonio Spurs,Denver Nuggets,16h,Amazon Prime Video
+04/04/26,Detroit Pistons,Philadelphia 76ers,20h,ESPN 2 / Disney+
+06/04/26,New York Knicks,Atlanta Hawks,20h,ESPN 2 / Disney+
+07/04/26,Minnesota Timberwolves,Indiana Pacers,21h,Amazon Prime Video
+07/04/26,Oklahoma City Thunder,Los Angeles Lakers,23h30,Amazon Prime Video
+08/04/26,Milwaukee Bucks,Detroit Pistons,20h30,ESPN 2
+08/04/26,Oklahoma City Thunder,Los Angeles Clippers,23h,ESPN 2
+09/04/26,Boston Celtics,New York Knicks,20h30,Amazon Prime Video
+09/04/26,Los Angeles Lakers,Golden State Warriors,23h,Amazon Prime Video
+10/04/26,Cleveland Cavaliers,Atlanta Hawks,20h30,Amazon Prime Video
+10/04/26,Oklahoma City Thunder,Denver Nuggets,23h,Amazon Prime Video

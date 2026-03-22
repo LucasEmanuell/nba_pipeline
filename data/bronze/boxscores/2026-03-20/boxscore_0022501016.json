@@ -3,7 +3,7 @@
         "version": 1,
         "code": 200,
         "request": "http://nba.cloud/games/0022501016/boxscore?Format=json",
-        "time": "2026-03-21 00:09:19.966103"
+        "time": "2026-03-21 00:17:24.364797"
     },
     "game": {
         "gameId": "0022501016",
