@@ -14,6 +14,7 @@ x-airflow-common:
     - ./data:/opt/airflow/data
     - ./notebooks:/opt/airflow/notebooks
     - airflow-logs:/opt/airflow/logs
+    - ./.env:/opt/airflow/.env
   depends_on:
     postgres:
       condition: service_healthy

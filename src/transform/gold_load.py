@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, MetaData, Table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import ProgrammingError
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -14,8 +17,7 @@ SILVER_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule_enriche
 SILVER_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
 
 # Conexão com o PostgreSQL
-DB_URL = "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
-# DB_URL = "postgresql+psycopg2://airflow:airflow@localhost:5433/airflow"
+DB_URL = os.getenv("DB_URL_INTERNAL")
 
 def set_primary_key(engine, table_name, pk_column):
     """Garante que a tabela tenha uma chave primária para o UPSERT funcionar no PostgreSQL."""
