@@ -8,4 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
-.env 
+.env
+
+# Arquivos pessoais de planejamento e anotações de decisão
+ROADMAP.md
+docs/
+
+# Dados gerados em runtime — não são código
+data/bronze/
+data/silver/
+data/gold/

@@ -1,47 +1,45 @@
 import os
 import logging
 from datetime import datetime
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, to_timestamp, expr
+from pyspark.sql.functions import (
+    col, explode, to_timestamp, expr,
+    substring, when, regexp_extract, lit,
+)
 
-# Configuração do Logging
+from src.spark_utils import get_spark_session
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Configuração de caminhos
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BRONZE_DIR = os.path.join(BASE_DIR, "data", "bronze", "schedule")
 SILVER_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule")
 
+
 def transform_schedule_bronze_to_silver():
-    logging.info("Iniciando Spark Session (Simulando AWS Glue)...")
-    
-    spark = SparkSession.builder \
-        .appName("NBA_Schedule_Silver") \
-        .master("local[*]") \
-        .config("spark.driver.memory", "2g") \
-        .getOrCreate()
-        
+    spark = get_spark_session("NBA_Schedule_Silver")
     spark.sparkContext.setLogLevel("WARN")
 
     hoje_str = datetime.now().strftime('%Y-%m-%d')
     input_path = os.path.join(BRONZE_DIR, hoje_str, "schedule_league_raw.json")
-    
+
     if not os.path.exists(input_path):
-        logging.error(f"Arquivo Bronze não encontrado em: {input_path}")
+        logger.error(f"Bronze não encontrado: {input_path}")
         spark.stop()
-        return
+        raise FileNotFoundError(input_path)
 
-    logging.info(f"Lendo JSON bruto: {input_path}")
-    
+    logger.info(f"Lendo JSON bruto: {input_path}")
     df_raw = spark.read.option("multiline", "true").json(input_path)
-    
-    logging.info("Transformando e achatando a estrutura do JSON...")
-    
-    df_exploded = df_raw.select(explode("leagueSchedule.gameDates").alias("game_dates")) \
-                        .select(explode("game_dates.games").alias("game"))
 
-    # 3. Selecionar e Tipar as colunas de forma Segura (Data Quality)
-    df_silver = df_exploded.select(
+    df_exploded = (
+        df_raw
+        .select(explode("leagueSchedule.gameDates").alias("game_dates"))
+        .select(explode("game_dates.games").alias("game"))
+    )
+
+    # Extração inicial: colunas de negócio + campos intermediários para derivações.
+    # series_text e game_code_teams são descartados no select final — são andaimes, não dado.
+    df_extracted = df_exploded.select(
         col("game.gameId").alias("game_id"),
         to_timestamp(col("game.gameDateTimeUTC"), "yyyy-MM-dd'T'HH:mm:ss'Z'").alias("game_datetime_utc"),
         col("game.gameStatus").cast("int").alias("game_status"),
@@ -49,25 +47,77 @@ def transform_schedule_bronze_to_silver():
         col("game.homeTeam.teamCity").alias("home_team_city"),
         col("game.awayTeam.teamName").alias("away_team_name"),
         col("game.awayTeam.teamCity").alias("away_team_city"),
-        
-        # AQUI ESTÁ A CORREÇÃO: Usamos get() via expr para retornar NULL se o array for vazio, em vez de quebrar o job
-        expr("get(game.broadcasters.nationalTvBroadcasters, 0).broadcasterDisplay").alias("us_broadcaster")
+        expr("get(game.broadcasters.nationalTvBroadcasters, 0).broadcasterDisplay").alias("us_broadcaster"),
+        col("game.seriesText").alias("series_text"),
+        # gameCode formato "YYYYMMDD/AWYHME" — split pega a parte dos tricodes
+        expr("split(game.gameCode, '/')[1]").alias("game_code_teams"),
+    ).filter(col("game_id").isNotNull())
+
+    # game_type derivado do prefixo do game_id — convenção da NBA:
+    # 001 pré-temporada, 002 temporada regular, 004 playoffs, 005 play-in
+    df_typed = df_extracted.withColumn(
+        "game_type",
+        when(substring(col("game_id"), 1, 3) == "002", "regular")
+        .when(substring(col("game_id"), 1, 3) == "004", "playoff")
+        .when(substring(col("game_id"), 1, 3) == "005", "play-in")
+        .otherwise("preseason"),
     )
 
-    df_silver = df_silver.filter(col("game_id").isNotNull())
-    
-    logging.info("Amostra dos dados transformados:")
-    df_silver.show(5, truncate=False)
-    
+    # Series wins: só para jogos de playoff.
+    # Formatos do seriesText: "NYK leads 3-1" | "Series tied 2-2" | "OKC wins 4-0"
+    # Quando não há texto (Game 1, série não iniciada), retorna NULL — correto.
+    series_leader = regexp_extract(col("series_text"), r"^(\w+)\s+(?:leads|wins)", 1)
+    score_a = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 1).cast("int")
+    score_b = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 2).cast("int")
+
+    away_tricode = col("game_code_teams").substr(1, 3)
+    home_tricode = col("game_code_teams").substr(4, 3)
+
+    is_playoff = col("game_type") == "playoff"
+    is_tied = series_leader == ""  # regexp_extract retorna "" quando não há match
+
+    df_with_series = (
+        df_typed
+        .withColumn(
+            "home_series_wins",
+            when(~is_playoff, lit(None).cast("int"))
+            .when(is_tied & score_a.isNotNull(), score_a)
+            .when(series_leader == home_tricode, score_a)
+            .when(series_leader == away_tricode, score_b)
+            .otherwise(lit(None).cast("int")),
+        )
+        .withColumn(
+            "away_series_wins",
+            when(~is_playoff, lit(None).cast("int"))
+            .when(is_tied & score_a.isNotNull(), score_a)
+            .when(series_leader == away_tricode, score_a)
+            .when(series_leader == home_tricode, score_b)
+            .otherwise(lit(None).cast("int")),
+        )
+    )
+
+    # Select final define o schema da Silver — colunas intermediárias ficam de fora
+    df_silver = df_with_series.select(
+        "game_id",
+        "game_datetime_utc",
+        "game_status",
+        "game_type",
+        "home_team_city",
+        "home_team_name",
+        "away_team_city",
+        "away_team_name",
+        "us_broadcaster",
+        "home_series_wins",
+        "away_series_wins",
+    )
+
     output_path = os.path.join(SILVER_DIR, hoje_str)
-    os.makedirs(output_path, exist_ok=True)
-    
-    logging.info(f"Salvando dados em Parquet na camada Silver: {output_path}")
-    
-    df_silver.write.mode("overwrite").parquet(output_path)
-    
-    logging.info("Processamento Silver concluído com sucesso!")
+    logger.info(f"Salvando Silver Schedule em Delta: {output_path}")
+    df_silver.write.format("delta").mode("overwrite").save(output_path)
+
+    logger.info(f"Silver Schedule: {df_silver.count()} jogos processados")
     spark.stop()
+
 
 if __name__ == "__main__":
     transform_schedule_bronze_to_silver()

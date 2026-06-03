@@ -13,4 +13,4 @@ RUN apt-get update \
 USER airflow
 
 # Instala todas as bibliotecas Python que o seu projeto precisa
-RUN pip install --no-cache-dir pyspark beautifulsoup4 requests pandas sqlalchemy psycopg2-binary pyarrow
+RUN pip install --no-cache-dir pyspark delta-spark beautifulsoup4 requests pandas sqlalchemy psycopg2-binary pyarrow

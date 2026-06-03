@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.14.3",
+    "delta-spark>=4.0.0",
     "pandas>=3.0.1",
     "psycopg2-binary>=2.9.11",
     "pyarrow>=23.0.1",

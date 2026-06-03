@@ -1,87 +1,88 @@
 import os
 import logging
 from datetime import datetime
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_date, from_utc_timestamp, expr
 
-# Configuração do Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from src.spark_utils import get_spark_session
 
-# Caminhos
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 NBA_SILVER_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule")
-JUMPER_BRONZE_DIR = os.path.join(BASE_DIR, "data", "bronze", "jumper_brasil")
+JUMPER_SILVER_DIR = os.path.join(BASE_DIR, "data", "silver", "jumper_brasil")
 ENRICHED_SILVER_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule_enriched")
 
+
 def enrich_schedule_with_brazil_tv():
-    logging.info("Iniciando Spark Session (Data Enrichment)...")
-    
-    spark = SparkSession.builder \
-        .appName("NBA_Enriched_Schedule") \
-        .master("local[*]") \
-        .getOrCreate()
-        
+    spark = get_spark_session("NBA_Enriched_Schedule")
     spark.sparkContext.setLogLevel("WARN")
 
     hoje_str = datetime.now().strftime('%Y-%m-%d')
     nba_path = os.path.join(NBA_SILVER_DIR, hoje_str)
-    jumper_path = os.path.join(JUMPER_BRONZE_DIR, hoje_str, "canais_jumper_raw.csv")
+    jumper_path = os.path.join(JUMPER_SILVER_DIR, hoje_str)
 
-    if not os.path.exists(nba_path) or not os.path.exists(jumper_path):
-        logging.error("Arquivos de origem não encontrados. Execute as extrações primeiro.")
+    if not os.path.exists(nba_path):
+        logger.error(f"Silver Schedule não encontrado: {nba_path}")
         spark.stop()
-        return
+        raise FileNotFoundError(nba_path)
 
-    logging.info("Lendo base oficial da NBA (Parquet)...")
-    df_nba = spark.read.parquet(nba_path)
-    
-    # 1. Ajuste de Timezone: Cria coluna de Data no fuso de SP apenas para o Join
-    df_nba = df_nba.withColumn("game_datetime_br", from_utc_timestamp(col("game_datetime_utc"), "America/Sao_Paulo"))
-    df_nba = df_nba.withColumn("data_jogo_br", to_date(col("game_datetime_br")))
+    if not os.path.exists(jumper_path):
+        logger.error(f"Silver Jumper não encontrado: {jumper_path}")
+        spark.stop()
+        raise FileNotFoundError(jumper_path)
 
-    logging.info("Lendo base do Jumper Brasil (CSV Bruto)...")
-    df_jumper = spark.read.option("header", "true").csv(jumper_path)
-    
-    # 2. Ajuste de Data Jumper: De 'dd/MM/yy' para Data real
-    df_jumper = df_jumper.withColumn("data_br_formatada", to_date(col("data_br"), "dd/MM/yy"))
-    
-    # 3. O JOIN Mágico: Data exata no BR + 'LIKE' no nome do time
-    logging.info("Cruzando os dados (JOIN)...")
+    logger.info("Lendo Silver Schedule (Delta)...")
+    df_nba = spark.read.format("delta").load(nba_path)
+
+    # Converte UTC para horário de Brasília para fazer o join por data local.
+    # America/Sao_Paulo respeita DST — diferente de subtrair timedelta(hours=-3) fixo.
+    df_nba = (
+        df_nba
+        .withColumn("game_datetime_br", from_utc_timestamp(col("game_datetime_utc"), "America/Sao_Paulo"))
+        .withColumn("game_date_br", to_date(col("game_datetime_br")))
+    )
+
+    logger.info("Lendo Silver Jumper (Delta)...")
+    # Silver Jumper já tem game_date tipado como Date e nomes canônicos.
+    # Não há transformação aqui — a Silver cumpriu seu contrato na camada anterior.
+    df_jumper = spark.read.format("delta").load(jumper_path)
+
+    logger.info("Cruzando calendário NBA com transmissões do Brasil...")
     join_cond = (
-        (col("data_jogo_br") == col("data_br_formatada")) &
-        # O mandante do Jumper tem que conter o 'team_name' da NBA (ex: 'Los Angeles Lakers' contém 'Lakers')
-        expr("lower(mandante) LIKE concat('%', lower(home_team_name), '%')") &
-        expr("lower(visitante) LIKE concat('%', lower(away_team_name), '%')")
+        (col("game_date_br") == col("game_date")) &
+        expr("lower(home_team_raw) LIKE concat('%', lower(home_team_name), '%')") &
+        expr("lower(away_team_raw) LIKE concat('%', lower(away_team_name), '%')")
     )
 
     df_enriched = df_nba.join(df_jumper, join_cond, "left")
 
-    # 4. Seleciona apenas o que importa (mantendo o calendário oficial e adicionando o Brasil)
+    # O select define o schema da enriched — inclui os novos campos de playoff
     df_final = df_enriched.select(
         col("game_id"),
         col("game_datetime_utc"),
         col("game_status"),
+        col("game_type"),
         col("home_team_city"),
         col("home_team_name"),
         col("away_team_city"),
         col("away_team_name"),
         col("us_broadcaster"),
-        col("canal_br").alias("brazil_broadcaster")
+        col("home_series_wins"),
+        col("away_series_wins"),
+        col("brazil_broadcaster"),
     )
 
-    logging.info("Amostra dos jogos que POSSUEM transmissão no Brasil:")
-    # Filtra só para mostrar no terminal que o cruzamento deu certo
-    df_final.filter(col("brazil_broadcaster").isNotNull()).show(5, truncate=False)
+    com_br = df_final.filter(col("brazil_broadcaster").isNotNull()).count()
+    total = df_final.count()
+    logger.info(f"Jogos com transmissão no Brasil: {com_br}/{total}")
 
-    # 5. Salva a nova tabela enriquecida
     output_path = os.path.join(ENRICHED_SILVER_DIR, hoje_str)
-    os.makedirs(output_path, exist_ok=True)
-    
-    logging.info(f"Salvando calendário enriquecido em Parquet: {output_path}")
-    df_final.write.mode("overwrite").parquet(output_path)
-    
-    logging.info("Enriquecimento concluído com sucesso!")
+    logger.info(f"Salvando Silver Enriched em Delta: {output_path}")
+    df_final.write.format("delta").mode("overwrite").save(output_path)
+
     spark.stop()
+
 
 if __name__ == "__main__":
     enrich_schedule_with_brazil_tv()
