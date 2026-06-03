@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 from datetime import datetime, timedelta
+from deltalake import DeltaTable
 from sqlalchemy import create_engine, MetaData, Table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import ProgrammingError
@@ -10,93 +11,109 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Caminhos
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SILVER_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule_enriched")
 SILVER_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
 
-# Conexão com o PostgreSQL
-DB_URL = os.getenv("DB_URL_INTERNAL")
+# Tenta conexão interna (Docker) primeiro; cai para externa se não configurada.
+DB_URL = os.getenv("DB_URL_INTERNAL") or os.getenv("DB_URL_EXTERNAL")
 
-def set_primary_key(engine, table_name, pk_column):
-    """Garante que a tabela tenha uma chave primária para o UPSERT funcionar no PostgreSQL."""
+
+def _read_delta(path: str) -> pd.DataFrame | None:
+    """Lê um Delta table com deltalake (delta-rs) — sem Spark, sem overhead de JVM."""
+    if not os.path.exists(path):
+        return None
+    return DeltaTable(path).to_pandas()
+
+
+def _ensure_schedule_schema(engine) -> None:
+    """Migration idempotente: adiciona colunas novas sem destruir dados existentes."""
+    new_columns = [
+        "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS game_type VARCHAR",
+        "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS home_series_wins INTEGER",
+        "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS away_series_wins INTEGER",
+        "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS poll_message_id BIGINT",
+    ]
+    with engine.begin() as conn:
+        for sql in new_columns:
+            try:
+                conn.execute(text(sql))
+            except ProgrammingError:
+                pass  # tabela ainda não existe — será criada pelo to_sql a seguir
+
+
+def _ensure_bot_execucoes(engine) -> None:
+    """Cria a tabela de controle de idempotência dos bots se não existir."""
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bot_execucoes (
+                data_execucao DATE PRIMARY KEY,
+                enquetes_enviadas BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """))
+
+
+def _set_primary_key(engine, table_name: str, pk_column: str) -> None:
     with engine.begin() as conn:
         try:
-            # Tenta adicionar a chave primária. 
-            conn.execute(text(f"ALTER TABLE {table_name} ADD PRIMARY KEY ({pk_column});"))
-            logging.info(f"🔑 Chave primária ({pk_column}) adicionada na tabela {table_name}.")
-        except ProgrammingError as e:
-            # Se a chave já existir, o Postgres retorna erro. Nós apenas ignoramos e seguimos em frente.
-            pass
+            conn.execute(text(f"ALTER TABLE {table_name} ADD PRIMARY KEY ({pk_column})"))
+        except ProgrammingError:
+            pass  # chave já existe
 
-def load_silver_to_gold(target_date: str):
-    logging.info(f"Iniciando carga (Load) da camada Silver para a Gold (PostgreSQL) - Data: {target_date}")
-    
-    engine = create_engine(DB_URL)
+
+def _upsert(engine, df: pd.DataFrame, table_name: str, pk_column: str) -> int:
     metadata = MetaData()
-    
-    schedule_path = os.path.join(SILVER_SCHEDULE_DIR, target_date)
-    boxscore_path = os.path.join(SILVER_BOXSCORE_DIR, target_date)
-    
-    # ==========================================
-    # 1. CARGA DO CALENDÁRIO
-    # ==========================================
-    if os.path.exists(schedule_path):
-        logging.info("Lendo Parquet de Calendário (Silver)...")
-        df_schedule = pd.read_parquet(schedule_path)
-        
-        # Cria a tabela no Postgres se não existir (apenas a estrutura, sem dados)
-        df_schedule.head(0).to_sql('dim_nba_schedule', engine, if_exists='append', index=False)
-        
-        # Garante a Chave Primária antes de fazer o Upsert
-        set_primary_key(engine, 'dim_nba_schedule', 'game_id')
-        
-        # Reflete a estrutura da tabela do banco de forma correta (Padrão SQLAlchemy 2.0)
-        table_schedule = Table('dim_nba_schedule', metadata, autoload_with=engine)
-        
-        logging.info("Inserindo dados na tabela dim_nba_schedule (UPSERT)...")
-        with engine.begin() as conn:
-            for record in df_schedule.to_dict(orient='records'):
-                stmt = insert(table_schedule).values(**record)
-                
-                # Se o game_id já existir, atualiza as outras colunas. Se não, insere novo.
-                update_dict = {c.name: c for c in stmt.excluded if c.name != 'game_id'}
-                upsert_stmt = stmt.on_conflict_do_update(index_elements=['game_id'], set_=update_dict)
-                conn.execute(upsert_stmt)
-                
-        logging.info("✅ Calendário carregado com sucesso na Gold!")
-    else:
-        logging.warning("⚠️ Calendário não encontrado para essa data.")
+    table = Table(table_name, metadata, autoload_with=engine)
 
-    # ==========================================
-    # 2. CARGA DOS PLACARES (BOXSCORES)
-    # ==========================================
-    if os.path.exists(boxscore_path):
-        logging.info("Lendo Parquet de Boxscores (Silver)...")
-        df_boxscores = pd.read_parquet(boxscore_path)
-        
-        df_boxscores.head(0).to_sql('fact_nba_boxscores', engine, if_exists='append', index=False)
-        set_primary_key(engine, 'fact_nba_boxscores', 'game_id')
-        
-        table_boxscores = Table('fact_nba_boxscores', metadata, autoload_with=engine)
-        
-        logging.info("Inserindo dados na tabela fact_nba_boxscores (UPSERT)...")
-        with engine.begin() as conn:
-            for record in df_boxscores.to_dict(orient='records'):
-                stmt = insert(table_boxscores).values(**record)
-                update_dict = {c.name: c for c in stmt.excluded if c.name != 'game_id'}
-                upsert_stmt = stmt.on_conflict_do_update(index_elements=['game_id'], set_=update_dict)
-                conn.execute(upsert_stmt)
-                
-        logging.info("✅ Boxscores carregados com sucesso na Gold!")
+    with engine.begin() as conn:
+        for record in df.to_dict(orient='records'):
+            stmt = insert(table).values(**record)
+            update_cols = {c.name: c for c in stmt.excluded if c.name != pk_column}
+            conn.execute(stmt.on_conflict_do_update(index_elements=[pk_column], set_=update_cols))
+
+    return len(df)
+
+
+def load_silver_to_gold(target_date: str) -> None:
+    logger.info(f"Iniciando carga Silver → Gold para {target_date}")
+
+    engine = create_engine(DB_URL)
+    _ensure_bot_execucoes(engine)
+
+    # ── Calendário ───────────────────────────────────────────────────────────
+    schedule_path = os.path.join(SILVER_SCHEDULE_DIR, target_date)
+    df_schedule = _read_delta(schedule_path)
+
+    if df_schedule is not None:
+        # to_sql com head(0) cria a tabela se não existir, sem inserir dados
+        df_schedule.head(0).to_sql('dim_nba_schedule', engine, if_exists='append', index=False)
+        _ensure_schedule_schema(engine)
+        _set_primary_key(engine, 'dim_nba_schedule', 'game_id')
+
+        count = _upsert(engine, df_schedule, 'dim_nba_schedule', 'game_id')
+        logger.info(f"dim_nba_schedule: {count} registros upsertados para {target_date}")
     else:
-        logging.warning("⚠️ Boxscores não encontrados para essa data.")
+        logger.warning(f"Silver Schedule não encontrado para {target_date} — pulando")
+
+    # ── Boxscores ────────────────────────────────────────────────────────────
+    boxscore_path = os.path.join(SILVER_BOXSCORE_DIR, target_date)
+    df_boxscores = _read_delta(boxscore_path)
+
+    if df_boxscores is not None:
+        df_boxscores.head(0).to_sql('fact_nba_boxscores', engine, if_exists='append', index=False)
+        _set_primary_key(engine, 'fact_nba_boxscores', 'game_id')
+
+        count = _upsert(engine, df_boxscores, 'fact_nba_boxscores', 'game_id')
+        logger.info(f"fact_nba_boxscores: {count} registros upsertados para {target_date}")
+    else:
+        logger.warning(f"Silver Boxscores não encontrado para {target_date} — pulando")
+
 
 if __name__ == "__main__":
-    # Carregando os dados de ontem e de hoje
     hoje = datetime.now().strftime('%Y-%m-%d')
     ontem = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-    
     load_silver_to_gold(hoje)
     load_silver_to_gold(ontem)

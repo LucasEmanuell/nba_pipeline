@@ -10,6 +10,8 @@ from src.transform.silver_jumper import transform_jumper_bronze_to_silver
 from src.transform.silver_schedule_enriched import enrich_schedule_with_brazil_tv
 from src.transform.silver_boxscores import transform_boxscores_bronze_to_silver
 from src.transform.gold_load import load_silver_to_gold
+from src.bot.bot_resultados import main as send_results
+from src.bot.bot_enquetes import main as send_polls
 
 
 def run_extract_boxscores():
@@ -40,7 +42,7 @@ default_args = {
 with DAG(
     'nba_etl_daily_pipeline',
     default_args=default_args,
-    description='Pipeline de extração, transformação e carga da NBA e Jumper Brasil',
+    description='Pipeline diário NBA: Bronze → Silver (Delta) → Gold → Telegram',
     schedule_interval='0 5 * * *',
     catchup=False,
     tags=['nba', 'etl', 'pyspark', 'delta'],
@@ -51,56 +53,61 @@ with DAG(
         task_id='extract_nba_schedule',
         python_callable=extract_schedule_to_datalake,
     )
-
     task_extract_jumper = PythonOperator(
         task_id='extract_jumper_brasil',
         python_callable=extract_jumper_to_datalake,
     )
-
     task_extract_boxscores = PythonOperator(
         task_id='extract_nba_boxscores',
         python_callable=run_extract_boxscores,
     )
 
-    # ── Transformação (Silver) ───────────────────────────────────────────────
+    # ── Transformação (Silver / Delta) ───────────────────────────────────────
     task_silver_schedule = PythonOperator(
         task_id='transform_schedule_silver',
         python_callable=transform_schedule_bronze_to_silver,
     )
-
     task_silver_jumper = PythonOperator(
         task_id='transform_jumper_silver',
         python_callable=transform_jumper_bronze_to_silver,
     )
-
     task_enrich_schedule = PythonOperator(
         task_id='enrich_schedule_brazil_tv',
         python_callable=enrich_schedule_with_brazil_tv,
     )
-
     task_silver_boxscores = PythonOperator(
         task_id='transform_boxscores_silver',
         python_callable=run_transform_boxscores,
     )
 
-    # ── Carga (Gold) ─────────────────────────────────────────────────────────
+    # ── Carga (Gold / PostgreSQL) ────────────────────────────────────────────
     task_load_gold = PythonOperator(
         task_id='load_silver_to_gold_postgres',
         python_callable=run_gold_load,
+    )
+
+    # ── Entrega (Telegram) ───────────────────────────────────────────────────
+    task_send_results = PythonOperator(
+        task_id='send_results_telegram',
+        python_callable=send_results,
+    )
+    task_send_polls = PythonOperator(
+        task_id='send_polls_telegram',
+        python_callable=send_polls,
     )
 
     # ── Dependências ─────────────────────────────────────────────────────────
     #
     # Fluxo do calendário:
     #   extract_schedule ──► silver_schedule ──┐
-    #                                          ├──► enrich ──► gold
+    #                                          ├──► enrich ──► gold ──► results ──► polls
     #   extract_jumper ───► silver_jumper ─────┘
     #
-    # Fluxo dos boxscores (paralelo ao de cima):
+    # Fluxo dos boxscores (parallel ao calendário):
     #   extract_boxscores ──► silver_boxscores ──► gold
     #
     task_extract_schedule >> task_silver_schedule
     task_extract_jumper >> task_silver_jumper
     [task_silver_schedule, task_silver_jumper] >> task_enrich_schedule >> task_load_gold
-
     task_extract_boxscores >> task_silver_boxscores >> task_load_gold
+    task_load_gold >> task_send_results >> task_send_polls
