@@ -1,3 +1,4 @@
+import json
 import os
 import logging
 from datetime import datetime
@@ -111,11 +112,38 @@ def transform_schedule_bronze_to_silver():
         "away_series_wins",
     )
 
+    # conta os jogos do Bronze com Python puro, mais rapido que rodar o Spark de novo
+    with open(input_path) as f:
+        raw = json.load(f)
+    bronze_count = sum(len(d["games"]) for d in raw["leagueSchedule"]["gameDates"])
+
+    # cache evita que o Spark avalie o plano duas vezes, uma no count e outra no write
+    df_silver.cache()
+    silver_count = df_silver.count()
+
+    if silver_count == 0:
+        raise ValueError("Silver Schedule vazia apos transformacao")
+
+    loss_pct = (bronze_count - silver_count) / bronze_count
+    if loss_pct > 0.20:
+        raise ValueError(
+            f"Silver perdeu {loss_pct:.0%} dos registros do Bronze "
+            f"({silver_count}/{bronze_count}) - acima do limite de 20%"
+        )
+
+    unique_ids = df_silver.select("game_id").distinct().count()
+    if unique_ids != silver_count:
+        raise ValueError(
+            f"game_id nao e unico: {silver_count} registros, {unique_ids} ids distintos"
+        )
+
+    logger.info(f"Quality OK: {silver_count} jogos, {unique_ids} ids unicos ({loss_pct:.1%} de perda vs Bronze)")
+
     output_path = os.path.join(SILVER_DIR, hoje_str)
     logger.info(f"Salvando Silver Schedule em Delta: {output_path}")
     df_silver.write.format("delta").mode("overwrite").save(output_path)
+    df_silver.unpersist()
 
-    logger.info(f"Silver Schedule: {df_silver.count()} jogos processados")
     spark.stop()
 
 

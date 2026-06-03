@@ -73,13 +73,20 @@ def enrich_schedule_with_brazil_tv():
         col("brazil_broadcaster"),
     )
 
-    com_br = df_final.filter(col("brazil_broadcaster").isNotNull()).count()
+    df_final.cache()
     total = df_final.count()
-    logger.info(f"Jogos com transmissão no Brasil: {com_br}/{total}")
+
+    if total == 0:
+        raise ValueError("Silver Enriched vazia — schedule ou jumper pode estar corrompido")
+
+    com_br = df_final.filter(col("brazil_broadcaster").isNotNull()).count()
+    pct_br = com_br / total
+    logger.info(f"Jogos com transmissao no Brasil: {com_br}/{total} ({pct_br:.1%})")
 
     output_path = os.path.join(ENRICHED_SILVER_DIR, hoje_str)
     logger.info(f"Salvando Silver Enriched em Delta: {output_path}")
     df_final.write.format("delta").mode("overwrite").save(output_path)
+    df_final.unpersist()
 
     spark.stop()
 

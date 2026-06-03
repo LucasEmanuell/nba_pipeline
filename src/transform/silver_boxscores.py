@@ -47,11 +47,25 @@ def transform_boxscores_bronze_to_silver(target_date: str):
         .otherwise("data_anomaly"),
     )
 
+    df_silver.cache()
+    silver_count = df_silver.count()
+
+    if silver_count == 0:
+        raise ValueError(f"Silver Boxscores vazia para {target_date}")
+
+    invalid_scores = df_silver.filter(
+        (col("away_score") < 0) | (col("home_score") < 0)
+    ).count()
+    if invalid_scores > 0:
+        raise ValueError(f"{invalid_scores} boxscore(s) com placar negativo para {target_date}")
+
+    logger.info(f"Quality OK: {silver_count} boxscores validos para {target_date}")
+
     output_path = os.path.join(SILVER_DIR, target_date)
     logger.info(f"Salvando Silver Boxscores em Delta: {output_path}")
     df_silver.write.format("delta").mode("overwrite").save(output_path)
+    df_silver.unpersist()
 
-    logger.info(f"Silver Boxscores: {df_silver.count()} jogos processados para {target_date}")
     spark.stop()
 
 
