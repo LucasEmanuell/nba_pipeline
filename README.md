@@ -85,6 +85,59 @@ Star Schema com quatro tabelas:
 
 Temporada 2025-26 completa: **1.395 jogos**, **683 jogadores**, **30.740 registros** de player stats.
 
+```mermaid
+erDiagram
+    dim_nba_schedule {
+        string game_id PK
+        date game_date
+        string home_team
+        string away_team
+        string arena
+        string broadcast
+        string game_type
+        int home_series_wins
+        int away_series_wins
+    }
+
+    fact_nba_boxscores {
+        string game_id PK
+        int home_score
+        int away_score
+        string winner_team
+        int winner_team_id
+    }
+
+    dim_players {
+        int player_id PK
+        string player_name
+        string position
+    }
+
+    fact_player_game_stats {
+        string stat_id PK
+        string game_id FK
+        int player_id FK
+        string team_name
+        string side
+        boolean starter
+        string minutes
+        int pts
+        int reb
+        int ast
+        int stl
+        int blk
+        int tov
+        int plus_minus
+        float fg_pct
+        float tp_pct
+        float ft_pct
+    }
+
+    dim_nba_schedule ||--o{ fact_nba_boxscores : "game_id"
+    dim_nba_schedule ||--o{ fact_player_game_stats : "game_id"
+    dim_players ||--o{ fact_player_game_stats : "player_id"
+```
+
 ---
 
 ## DAGs
