@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 from datetime import datetime, timedelta
 from deltalake import DeltaTable
+from deltalake.exceptions import TableNotFoundError
 from sqlalchemy import create_engine, MetaData, Table, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import ProgrammingError
@@ -25,7 +26,11 @@ def _read_delta(path: str) -> pd.DataFrame | None:
     """Lê um Delta table com deltalake (delta-rs) — sem Spark, sem overhead de JVM."""
     if not os.path.exists(path):
         return None
-    return DeltaTable(path).to_pandas()
+    try:
+        return DeltaTable(path).to_pandas()
+    except TableNotFoundError:
+        logger.warning(f"Delta table em {path} existe mas está corrompido (delta_log vazio) — pulando")
+        return None
 
 
 def _ensure_schedule_schema(engine) -> None:

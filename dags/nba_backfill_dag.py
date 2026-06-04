@@ -17,11 +17,22 @@ def run_silver_all_dates():
     if not os.path.exists(BRONZE_BOXSCORE_DIR):
         return
 
-    for date_str in sorted(os.listdir(BRONZE_BOXSCORE_DIR)):
-        silver_path = os.path.join(SILVER_BOXSCORE_DIR, date_str)
-        if os.path.exists(silver_path):
-            continue
-        transform_boxscores_bronze_to_silver(date_str)
+    dates_to_process = [
+        d for d in sorted(os.listdir(BRONZE_BOXSCORE_DIR))
+        if not os.path.exists(os.path.join(SILVER_BOXSCORE_DIR, d))
+    ]
+
+    if not dates_to_process:
+        return
+
+    # stop_spark=False reutiliza a sessao entre datas sem reiniciar a JVM a cada iteracao
+    for date_str in dates_to_process:
+        transform_boxscores_bronze_to_silver(date_str, stop_spark=False)
+
+    from pyspark.sql import SparkSession
+    active = SparkSession.getActiveSession()
+    if active:
+        active.stop()
 
 
 def run_gold_all_dates():

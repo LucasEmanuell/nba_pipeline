@@ -1,6 +1,7 @@
 x-airflow-common:
   &airflow-common
   build: .
+  user: "50000:0"
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor

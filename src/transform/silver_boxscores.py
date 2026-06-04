@@ -13,14 +13,13 @@ BRONZE_DIR = os.path.join(BASE_DIR, "data", "bronze", "boxscores")
 SILVER_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
 
 
-def transform_boxscores_bronze_to_silver(target_date: str):
+def transform_boxscores_bronze_to_silver(target_date: str, stop_spark: bool = True):
     spark = get_spark_session("NBA_Boxscores_Silver")
     spark.sparkContext.setLogLevel("WARN")
 
     bronze_dir = os.path.join(BRONZE_DIR, target_date)
     if not os.path.exists(bronze_dir):
-        logger.warning(f"Nenhum boxscore na Bronze para {target_date} — data sem jogos ou extração pendente.")
-        spark.stop()
+        logger.warning(f"Nenhum boxscore na Bronze para {target_date}, data sem jogos ou extração pendente.")
         return
 
     input_path = os.path.join(bronze_dir, "*.json")
@@ -66,7 +65,8 @@ def transform_boxscores_bronze_to_silver(target_date: str):
     df_silver.write.format("delta").mode("overwrite").save(output_path)
     df_silver.unpersist()
 
-    spark.stop()
+    if stop_spark:
+        spark.stop()
 
 
 if __name__ == "__main__":
