@@ -20,6 +20,8 @@ def transform_boxscores_bronze_to_silver(target_date: str, stop_spark: bool = Tr
     bronze_dir = os.path.join(BRONZE_DIR, target_date)
     if not os.path.exists(bronze_dir):
         logger.warning(f"Nenhum boxscore na Bronze para {target_date}, data sem jogos ou extração pendente.")
+        if stop_spark:
+            spark.stop()
         return
 
     input_path = os.path.join(bronze_dir, "*.json")
@@ -49,21 +51,23 @@ def transform_boxscores_bronze_to_silver(target_date: str, stop_spark: bool = Tr
     df_silver.cache()
     silver_count = df_silver.count()
 
-    if silver_count == 0:
-        raise ValueError(f"Silver Boxscores vazia para {target_date}")
+    try:
+        if silver_count == 0:
+            raise ValueError(f"Silver Boxscores vazia para {target_date}")
 
-    invalid_scores = df_silver.filter(
-        (col("away_score") < 0) | (col("home_score") < 0)
-    ).count()
-    if invalid_scores > 0:
-        raise ValueError(f"{invalid_scores} boxscore(s) com placar negativo para {target_date}")
+        invalid_scores = df_silver.filter(
+            (col("away_score") < 0) | (col("home_score") < 0)
+        ).count()
+        if invalid_scores > 0:
+            raise ValueError(f"{invalid_scores} boxscore(s) com placar negativo para {target_date}")
 
-    logger.info(f"Quality OK: {silver_count} boxscores validos para {target_date}")
+        logger.info(f"Quality OK: {silver_count} boxscores validos para {target_date}")
 
-    output_path = os.path.join(SILVER_DIR, target_date)
-    logger.info(f"Salvando Silver Boxscores em Delta: {output_path}")
-    df_silver.write.format("delta").mode("overwrite").save(output_path)
-    df_silver.unpersist()
+        output_path = os.path.join(SILVER_DIR, target_date)
+        logger.info(f"Salvando Silver Boxscores em Delta: {output_path}")
+        df_silver.write.format("delta").mode("overwrite").save(output_path)
+    finally:
+        df_silver.unpersist()
 
     if stop_spark:
         spark.stop()

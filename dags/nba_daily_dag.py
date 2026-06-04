@@ -9,6 +9,7 @@ from src.transform.silver_schedule import transform_schedule_bronze_to_silver
 from src.transform.silver_jumper import transform_jumper_bronze_to_silver
 from src.transform.silver_schedule_enriched import enrich_schedule_with_brazil_tv
 from src.transform.silver_boxscores import transform_boxscores_bronze_to_silver
+from src.transform.silver_player_stats import transform_player_stats_bronze_to_silver
 from src.transform.gold_load import load_silver_to_gold
 from src.bot.bot_resultados import main as send_results
 from src.bot.bot_enquetes import main as send_polls
@@ -22,6 +23,11 @@ def run_extract_boxscores():
 def run_transform_boxscores():
     ontem = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     transform_boxscores_bronze_to_silver(ontem)
+
+
+def run_transform_player_stats():
+    ontem = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    transform_player_stats_bronze_to_silver(ontem)
 
 
 def run_gold_load():
@@ -79,6 +85,10 @@ with DAG(
         task_id='transform_boxscores_silver',
         python_callable=run_transform_boxscores,
     )
+    task_silver_player_stats = PythonOperator(
+        task_id='transform_player_stats_silver',
+        python_callable=run_transform_player_stats,
+    )
 
     # ── Carga (Gold / PostgreSQL) ────────────────────────────────────────────
     task_load_gold = PythonOperator(
@@ -110,4 +120,5 @@ with DAG(
     task_extract_jumper >> task_silver_jumper
     [task_silver_schedule, task_silver_jumper] >> task_enrich_schedule >> task_load_gold
     task_extract_boxscores >> task_silver_boxscores >> task_load_gold
+    task_extract_boxscores >> task_silver_player_stats >> task_load_gold
     task_load_gold >> task_send_results >> task_send_polls

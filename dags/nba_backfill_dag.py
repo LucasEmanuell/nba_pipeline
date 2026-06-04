@@ -5,29 +5,39 @@ from datetime import datetime
 
 from src.extract.extract_boxscores_backfill import run_backfill
 from src.transform.silver_boxscores import transform_boxscores_bronze_to_silver
+from src.transform.silver_player_stats import transform_player_stats_bronze_to_silver
 from src.transform.gold_load import load_silver_to_gold
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRONZE_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "bronze", "boxscores")
 SILVER_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
+SILVER_PLAYER_DIR = os.path.join(BASE_DIR, "data", "silver", "player_stats")
 
 
 def run_silver_all_dates():
-    """Processa a Silver para cada data que tem Bronze mas ainda nao tem Silver."""
+    """Processa boxscores e player stats para cada data que tem Bronze mas nao tem Silver."""
     if not os.path.exists(BRONZE_BOXSCORE_DIR):
         return
 
-    dates_to_process = [
+    dates_boxscores = [
         d for d in sorted(os.listdir(BRONZE_BOXSCORE_DIR))
         if not os.path.exists(os.path.join(SILVER_BOXSCORE_DIR, d))
     ]
+    dates_players = [
+        d for d in sorted(os.listdir(BRONZE_BOXSCORE_DIR))
+        if not os.path.exists(os.path.join(SILVER_PLAYER_DIR, d))
+    ]
+    dates_to_process = sorted(set(dates_boxscores) | set(dates_players))
 
     if not dates_to_process:
         return
 
     # stop_spark=False reutiliza a sessao entre datas sem reiniciar a JVM a cada iteracao
     for date_str in dates_to_process:
-        transform_boxscores_bronze_to_silver(date_str, stop_spark=False)
+        if date_str in dates_boxscores:
+            transform_boxscores_bronze_to_silver(date_str, stop_spark=False)
+        if date_str in dates_players:
+            transform_player_stats_bronze_to_silver(date_str, stop_spark=False)
 
     from pyspark.sql import SparkSession
     active = SparkSession.getActiveSession()

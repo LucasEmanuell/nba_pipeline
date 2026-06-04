@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SILVER_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule_enriched")
 SILVER_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
+SILVER_PLAYER_DIR = os.path.join(BASE_DIR, "data", "silver", "player_stats")
 
 # Tenta conexão interna (Docker) primeiro; cai para externa se não configurada.
 DB_URL = os.getenv("DB_URL_INTERNAL") or os.getenv("DB_URL_EXTERNAL")
@@ -115,6 +116,30 @@ def load_silver_to_gold(target_date: str) -> None:
         logger.info(f"fact_nba_boxscores: {count} registros upsertados para {target_date}")
     else:
         logger.warning(f"Silver Boxscores não encontrado para {target_date} — pulando")
+
+    # ── Player Stats ─────────────────────────────────────────────────────────
+    player_path = os.path.join(SILVER_PLAYER_DIR, target_date)
+    df_players = _read_delta(player_path)
+
+    if df_players is not None:
+        # dim_players: uma linha por jogador, atualiza se o jogador mudar de time
+        df_dim_players = df_players[["player_id", "player_name", "position"]].drop_duplicates("player_id")
+        df_dim_players.head(0).to_sql('dim_players', engine, if_exists='append', index=False)
+        _set_primary_key(engine, 'dim_players', 'player_id')
+        _upsert(engine, df_dim_players, 'dim_players', 'player_id')
+
+        # fact_player_game_stats: PK composta (game_id, player_id)
+        df_fact = df_players.drop(columns=["player_name", "position"])
+        df_fact["pk"] = df_fact["game_id"].astype(str) + "_" + df_fact["player_id"].astype(str)
+        df_fact = df_fact.drop_duplicates("pk")
+
+        df_fact.head(0).to_sql('fact_player_game_stats', engine, if_exists='append', index=False)
+        _set_primary_key(engine, 'fact_player_game_stats', 'pk')
+        _upsert(engine, df_fact, 'fact_player_game_stats', 'pk')
+
+        logger.info(f"player stats: {len(df_players)} linhas, {len(df_dim_players)} jogadores unicos para {target_date}")
+    else:
+        logger.warning(f"Silver Player Stats não encontrado para {target_date} — pulando")
 
 
 if __name__ == "__main__":
