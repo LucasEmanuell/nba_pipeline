@@ -38,7 +38,7 @@ def _extract_side(df_raw, side: str, team_col: str):
             col("player.personId").alias("player_id"),
             col("player.name").alias("player_name"),
             col("player.position").alias("position"),
-            col("player.starter").alias("starter"),
+            col("player.starter").cast("int").alias("starter"),
             col("player.played").alias("played"),
             col("player.statistics.minutes").alias("minutes"),
             col("player.statistics.points").cast("int").alias("pts"),

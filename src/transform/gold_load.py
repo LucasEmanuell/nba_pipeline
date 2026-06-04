@@ -122,6 +122,10 @@ def load_silver_to_gold(target_date: str) -> None:
     df_players = _read_delta(player_path)
 
     if df_players is not None:
+        # starter vem como bool ou string "1"/"0" dependendo do jogo — normaliza para bool
+        df_players = df_players.copy()
+        df_players['starter'] = df_players['starter'].isin([True, 1, '1'])
+
         # dim_players: uma linha por jogador, atualiza se o jogador mudar de time
         df_dim_players = df_players[["player_id", "player_name", "position"]].drop_duplicates("player_id")
         df_dim_players.head(0).to_sql('dim_players', engine, if_exists='append', index=False)
