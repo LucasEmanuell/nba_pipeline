@@ -17,9 +17,11 @@ DB_URL = os.getenv("DB_URL_INTERNAL") or os.getenv("DB_URL_EXTERNAL")
 
 
 def _ja_enviou_hoje(engine, hoje: str) -> bool:
-    result = engine.execute(text(
-        "SELECT enquetes_enviadas FROM bot_execucoes WHERE data_execucao = :d"
-    ), {"d": hoje}).fetchone()
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT enquetes_enviadas FROM bot_execucoes WHERE data_execucao = :d"),
+            {"d": hoje},
+        ).fetchone()
     return result is not None and result[0]
 
 
