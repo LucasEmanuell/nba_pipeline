@@ -43,32 +43,44 @@ def _salvar_poll_message_id(engine, game_id: str, message_id: int) -> None:
 
 
 def _build_poll_options(row: dict) -> list[str]:
-    """Retorna as opções da enquete.
+    away = f"{row['away_team_city']} {row['away_team_name']}"
+    home = f"{row['home_team_city']} {row['home_team_name']}"
 
-    Na temporada regular: apenas os nomes dos times.
-    Nos playoffs: mostra o placar hipotético se cada time vencer este jogo.
-    Ex: serie 3-1 → opções são "Lakers 4x1" (fecha) vs "Warriors 2x3" (reduz).
-    """
     if row.get('game_type') == 'playoff' and row.get('home_series_wins') is not None:
         hw = int(row['home_series_wins'])
         aw = int(row['away_series_wins'])
-        return [
-            f"{row['away_team_name']} {aw + 1}x{hw}",
-            f"{row['home_team_name']} {hw + 1}x{aw}",
-        ]
-    return [row['away_team_name'], row['home_team_name']]
+        return [f"{away} {aw + 1}x{hw}", f"{home} {hw + 1}x{aw}"]
+
+    return [away, home]
+
+
+def _send_and_pin_header(hoje_str: str) -> None:
+    data_br = datetime.strptime(hoje_str, '%Y-%m-%d').strftime('%d/%m')
+    texto = f"📅 *Jogos de Hoje — {data_br}*"
+
+    resp = requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+        json={"chat_id": CHAT_ID, "text": texto, "parse_mode": "Markdown"},
+        timeout=10,
+    )
+    if not resp.ok:
+        logger.warning(f"Falha ao enviar header: {resp.text}")
+        return
+
+    message_id = resp.json()['result']['message_id']
+    requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/pinChatMessage",
+        json={"chat_id": CHAT_ID, "message_id": message_id, "disable_notification": True},
+        timeout=10,
+    )
 
 
 def _send_poll(question: str, options: list[str]) -> int | None:
-    """Envia enquete e retorna o message_id, ou None em caso de falha."""
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPoll"
-    payload = {
-        "chat_id": CHAT_ID,
-        "question": question,
-        "options": options,
-        "is_anonymous": False,
-    }
-    response = requests.post(url, json=payload, timeout=10)
+    response = requests.post(
+        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPoll",
+        json={"chat_id": CHAT_ID, "question": question, "options": options, "is_anonymous": False},
+        timeout=10,
+    )
     if response.ok:
         return response.json()['result']['message_id']
     logger.error(f"Falha ao enviar enquete '{question}': {response.text}")
@@ -87,15 +99,16 @@ def main():
         logger.info(f"Enquetes de {hoje} já foram enviadas — nada a fazer.")
         return
 
-    # Filtra por data no fuso de Brasília e exclui jogos que já têm enquete ativa.
     query = text("""
         SELECT
-            game_id, away_team_name, home_team_name,
+            game_id,
+            away_team_city, away_team_name,
+            home_team_city, home_team_name,
             brazil_broadcaster, game_type,
-            home_series_wins, away_series_wins
+            home_series_wins, away_series_wins,
+            game_datetime_utc
         FROM dim_nba_schedule
         WHERE DATE(game_datetime_utc AT TIME ZONE 'America/Sao_Paulo') = :hoje
-          AND brazil_broadcaster IS NOT NULL
           AND poll_message_id IS NULL
         ORDER BY game_datetime_utc
     """)
@@ -104,13 +117,16 @@ def main():
         df_jogos = pd.read_sql(query, conn, params={"hoje": hoje})
 
     if df_jogos.empty:
-        logger.info("Nenhum jogo com transmissão no Brasil hoje.")
+        logger.info("Nenhum jogo encontrado para hoje.")
         return
 
     logger.info(f"{len(df_jogos)} jogos encontrados para {hoje}")
+    _send_and_pin_header(hoje)
 
     for _, row in df_jogos.iterrows():
-        pergunta = f"{row['away_team_name']} @ {row['home_team_name']} — {row['brazil_broadcaster']}"
+        hora = pd.Timestamp(row['game_datetime_utc']).tz_convert('America/Sao_Paulo').strftime('%Hh%M')
+        broadcaster = f" — {row['brazil_broadcaster']}" if row['brazil_broadcaster'] else ""
+        pergunta = f"{hora}{broadcaster}"
         opcoes = _build_poll_options(row)
 
         message_id = _send_poll(pergunta, opcoes)
