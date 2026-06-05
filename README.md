@@ -89,11 +89,11 @@ Temporada 2025-26 completa: **1.395 jogos**, **683 jogadores**, **30.740 registr
 erDiagram
     dim_nba_schedule {
         string game_id PK
-        date game_date
-        string home_team
-        string away_team
+        timestamp game_datetime_utc
+        string home_team_name
+        string away_team_name
         string arena
-        string broadcast
+        string brazil_broadcaster
         string game_type
         int home_series_wins
         int away_series_wins
