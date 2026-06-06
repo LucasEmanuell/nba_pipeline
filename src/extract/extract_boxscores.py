@@ -7,6 +7,14 @@ from datetime import datetime, timedelta
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 BOX_URL = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{game_id}.json"
+BOX_URL_STATIC = "https://cdn.nba.com/static/json/staticData/boxscore/boxscore_{game_id}.json"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Referer": "https://www.nba.com/",
+    "Origin": "https://www.nba.com",
+    "Accept": "application/json, text/plain, */*",
+}
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BRONZE_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "bronze", "schedule")
 BRONZE_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "bronze", "boxscores")
@@ -61,23 +69,29 @@ def extract_boxscores_to_datalake(target_date: str):
     
     sucessos = 0
     for game_id in game_ids:
-        url = BOX_URL.format(game_id=game_id)
-        try:
-            response = requests.get(url, timeout=15)
-            response.raise_for_status()
-            boxscore_data = response.json()
-            
-            file_path = os.path.join(target_dir, f"boxscore_{game_id}.json")
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(boxscore_data, f, ensure_ascii=False, indent=4)
-                
-            sucessos += 1
-            logging.info(f"Boxscore {game_id} salvo com sucesso.")
-            
-        except Exception as e:
-            logging.error(f"Erro ao baixar boxscore {game_id}: {e}")
-            
+        boxscore_data = None
+        for url in [BOX_URL.format(game_id=game_id), BOX_URL_STATIC.format(game_id=game_id)]:
+            try:
+                response = requests.get(url, headers=HEADERS, timeout=15)
+                response.raise_for_status()
+                boxscore_data = response.json()
+                break
+            except Exception as e:
+                logging.warning(f"Falha em {url}: {e}")
+
+        if boxscore_data is None:
+            logging.error(f"Boxscore {game_id} indisponível em todos os endpoints.")
+            continue
+
+        file_path = os.path.join(target_dir, f"boxscore_{game_id}.json")
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(boxscore_data, f, ensure_ascii=False, indent=4)
+        sucessos += 1
+        logging.info(f"Boxscore {game_id} salvo com sucesso.")
+
     logging.info(f"Extração concluída: {sucessos}/{len(game_ids)} boxscores salvos na camada Bronze.")
+    if sucessos == 0 and len(game_ids) > 0:
+        raise ValueError(f"Nenhum boxscore salvo para {target_date} — {len(game_ids)} jogos encontrados mas todos falharam.")
 
 if __name__ == "__main__":
     # Para teste, vamos buscar os jogos de ontem 
