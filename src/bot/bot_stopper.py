@@ -48,13 +48,10 @@ def encerrar_enquetes():
     engine = create_engine(DB_URL)
     now_utc = datetime.now(timezone.utc)
 
-    # Busca jogos com enquete ativa no dia corrente (fuso Brasil)
     query = text("""
         SELECT game_id, poll_message_id, game_datetime_utc
         FROM dim_nba_schedule
         WHERE poll_message_id IS NOT NULL
-          AND DATE(game_datetime_utc AT TIME ZONE 'America/Sao_Paulo')
-              = CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo'
     """)
 
     with engine.connect() as conn:
