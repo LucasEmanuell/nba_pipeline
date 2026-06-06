@@ -16,9 +16,9 @@ NBA_HEADERS = {
 }
 
 # URL primária usa sufixo de versão; fallback é a canonical sem versão.
-# A NBA às vezes atualiza o sufixo (_1, _2...) sem aviso — ter o fallback evita outage silencioso.
+# A NBA às vezes atualiza o sufixo (_1, _2...) sem aviso, o fallback evita outage silencioso.
 SCHEDULE_URLS = [
-    "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_11.json",  # region=11 Brazil — tem intlTvBroadcasters
+    "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_11.json",  # region=11 Brazil, tem intlTvBroadcasters
     "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json",
     "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json",
 ]
@@ -40,16 +40,16 @@ def _download_schedule() -> dict:
 
             total_games = sum(len(d["games"]) for d in data["leagueSchedule"]["gameDates"])
             if total_games < MIN_GAMES:
-                logger.warning(f"{source}: apenas {total_games} jogos (mínimo: {MIN_GAMES}) — tentando próxima fonte")
+                logger.warning(f"{source}: apenas {total_games} jogos (mínimo: {MIN_GAMES}), tentando próxima fonte")
                 continue
 
             logger.info(f"Calendário carregado: {source} ({total_games} jogos)")
             return data
 
         except (KeyError, ValueError) as e:
-            logger.warning(f"{source}: estrutura inesperada — {e}")
+            logger.warning(f"{source}: estrutura inesperada, {e}")
         except requests.RequestException as e:
-            logger.warning(f"{source}: falha na requisição — {e}")
+            logger.warning(f"{source}: falha na requisição, {e}")
 
     raise RuntimeError("Todas as fontes do calendário NBA falharam. Verificar logs acima.")
 

@@ -91,7 +91,7 @@ def extract_boxscores_to_datalake(target_date: str):
 
     logging.info(f"Extração concluída: {sucessos}/{len(game_ids)} boxscores salvos na camada Bronze.")
     if sucessos == 0 and len(game_ids) > 0:
-        raise ValueError(f"Nenhum boxscore salvo para {target_date} — {len(game_ids)} jogos encontrados mas todos falharam.")
+        raise ValueError(f"Nenhum boxscore salvo para {target_date}, {len(game_ids)} jogos encontrados mas todos falharam.")
 
 if __name__ == "__main__":
     # Para teste, vamos buscar os jogos de ontem 

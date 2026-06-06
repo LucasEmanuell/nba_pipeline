@@ -8,7 +8,7 @@ default_args = {
     'owner': 'lucas',
     'depends_on_past': False,
     'start_date': datetime(2026, 3, 20),
-    'retries': 0,  # stopper é best-effort — falha não deve acumular retries
+    'retries': 0,  # stopper é best-effort, falha não deve acumular retries
 }
 
 with DAG(

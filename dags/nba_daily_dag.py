@@ -48,6 +48,7 @@ with DAG(
     description='Pipeline diário NBA: Bronze → Silver (Delta) → Gold → Telegram',
     schedule_interval='0 8 * * *',
     catchup=False,
+    max_active_runs=1,
     tags=['nba', 'etl', 'pyspark', 'delta'],
 ) as dag:
 

@@ -39,7 +39,7 @@ def transform_schedule_bronze_to_silver():
     )
 
     # Extração inicial: colunas de negócio + campos intermediários para derivações.
-    # series_text e game_code_teams são descartados no select final — são andaimes, não dado.
+    # series_text e game_code_teams são descartados no select final, são andaimes pra derivações.
     df_extracted = df_exploded.select(
         col("game.gameId").alias("game_id"),
         to_timestamp(col("game.gameDateTimeUTC"), "yyyy-MM-dd'T'HH:mm:ss'Z'").alias("game_datetime_utc"),
@@ -50,15 +50,15 @@ def transform_schedule_bronze_to_silver():
         col("game.awayTeam.teamCity").alias("away_team_city"),
         # cast para string antes do get_json_object é necessário pois o JSON regional _11
         # pode inferir o campo de broadcaster como STRING, ArrayType(StringType) ou
-        # ArrayType(StructType) dependendo dos dados — cast normaliza tudo.
+        # ArrayType(StructType) dependendo dos dados, cast normaliza tudo.
         get_json_object(col("game.broadcasters.nationalTvBroadcasters").cast("string"), "$[0].broadcasterDisplay").alias("us_broadcaster"),
         get_json_object(col("game.broadcasters.intlTvBroadcasters").cast("string"), "$[0].broadcasterDisplay").alias("brazil_broadcaster"),
         col("game.seriesText").alias("series_text"),
-        # gameCode formato "YYYYMMDD/AWYHME" — split pega a parte dos tricodes
+        # gameCode formato "YYYYMMDD/AWYHME", split pega a parte dos tricodes
         expr("split(game.gameCode, '/')[1]").alias("game_code_teams"),
     ).filter(col("game_id").isNotNull())
 
-    # game_type derivado do prefixo do game_id — convenção da NBA:
+    # game_type derivado do prefixo do game_id, convenção da NBA:
     # 001 pré-temporada, 002 temporada regular, 004 playoffs, 005 play-in
     df_typed = df_extracted.withColumn(
         "game_type",
@@ -70,7 +70,7 @@ def transform_schedule_bronze_to_silver():
 
     # Series wins: só para jogos de playoff.
     # Formatos do seriesText: "NYK leads 3-1" | "Series tied 2-2" | "OKC wins 4-0"
-    # Quando não há texto (Game 1, série não iniciada), retorna NULL — correto.
+    # Quando não há texto (Game 1, série não iniciada), retorna NULL.
     series_leader = regexp_extract(col("series_text"), r"^(\w+)\s+(?:leads|wins)", 1)
     score_a = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 1).cast("int")
     score_b = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 2).cast("int")
@@ -101,7 +101,7 @@ def transform_schedule_bronze_to_silver():
         )
     )
 
-    # Select final define o schema da Silver — colunas intermediárias ficam de fora
+    # select final define o schema da Silver, colunas intermediárias ficam de fora
     df_silver = df_with_series.select(
         "game_id",
         "game_datetime_utc",

@@ -25,7 +25,7 @@ def _close_poll(message_id: int) -> bool:
     if response.ok:
         return True
     error = response.json().get('description', '')
-    # Poll already closed ou mensagem não existe — ambos são estados finais aceitáveis
+    # poll already closed ou mensagem não existe, ambos são estados finais aceitáveis
     if 'poll has already been closed' in error or 'message not found' in error.lower():
         return True
     logger.error(f"Erro ao fechar enquete {message_id}: {error}")

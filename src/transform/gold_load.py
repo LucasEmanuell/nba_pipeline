@@ -24,13 +24,13 @@ DB_URL = os.getenv("DB_URL_INTERNAL") or os.getenv("DB_URL_EXTERNAL")
 
 
 def _read_delta(path: str) -> pd.DataFrame | None:
-    """Lê um Delta table com deltalake (delta-rs) — sem Spark, sem overhead de JVM."""
+    """Lê um Delta table com deltalake (delta-rs), sem Spark e sem overhead de JVM."""
     if not os.path.exists(path):
         return None
     try:
         return DeltaTable(path).to_pandas()
     except TableNotFoundError:
-        logger.warning(f"Delta table em {path} existe mas está corrompido (delta_log vazio) — pulando")
+        logger.warning(f"Delta table em {path} existe mas está corrompido (delta_log vazio), pulando")
         return None
 
 
@@ -47,7 +47,7 @@ def _ensure_schedule_schema(engine) -> None:
             try:
                 conn.execute(text(sql))
             except ProgrammingError:
-                pass  # tabela ainda não existe — será criada pelo to_sql a seguir
+                pass  # tabela ainda não existe, será criada pelo to_sql a seguir
 
 
 def _ensure_bot_execucoes(engine) -> None:
@@ -106,7 +106,7 @@ def load_silver_to_gold(target_date: str) -> None:
         count = _upsert(engine, df_schedule, 'dim_nba_schedule', 'game_id')
         logger.info(f"dim_nba_schedule: {count} registros upsertados para {target_date}")
     else:
-        logger.warning(f"Silver Schedule não encontrado para {target_date} — pulando")
+        logger.warning(f"Silver Schedule não encontrado para {target_date}, pulando")
 
     # ── Boxscores ────────────────────────────────────────────────────────────
     boxscore_path = os.path.join(SILVER_BOXSCORE_DIR, target_date)
@@ -119,14 +119,14 @@ def load_silver_to_gold(target_date: str) -> None:
         count = _upsert(engine, df_boxscores, 'fact_nba_boxscores', 'game_id')
         logger.info(f"fact_nba_boxscores: {count} registros upsertados para {target_date}")
     else:
-        logger.warning(f"Silver Boxscores não encontrado para {target_date} — pulando")
+        logger.warning(f"Silver Boxscores não encontrado para {target_date}, pulando")
 
     # ── Player Stats ─────────────────────────────────────────────────────────
     player_path = os.path.join(SILVER_PLAYER_DIR, target_date)
     df_players = _read_delta(player_path)
 
     if df_players is not None:
-        # starter vem como bool ou string "1"/"0" dependendo do jogo — normaliza para bool
+        # starter vem como bool ou string "1"/"0" dependendo do jogo, normaliza para bool
         df_players = df_players.copy()
         df_players['starter'] = df_players['starter'].isin([True, 1, '1'])
 
@@ -147,7 +147,7 @@ def load_silver_to_gold(target_date: str) -> None:
 
         logger.info(f"player stats: {len(df_players)} linhas, {len(df_dim_players)} jogadores unicos para {target_date}")
     else:
-        logger.warning(f"Silver Player Stats não encontrado para {target_date} — pulando")
+        logger.warning(f"Silver Player Stats não encontrado para {target_date}, pulando")
 
 
 if __name__ == "__main__":

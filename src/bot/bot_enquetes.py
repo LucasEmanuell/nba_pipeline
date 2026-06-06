@@ -16,22 +16,25 @@ CHAT_ID = os.getenv("GROUP_ID")
 DB_URL = os.getenv("DB_URL_INTERNAL") or os.getenv("DB_URL_EXTERNAL")
 
 
-def _ja_enviou_hoje(engine, hoje: str) -> bool:
-    with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT enquetes_enviadas FROM bot_execucoes WHERE data_execucao = :d"),
-            {"d": hoje},
-        ).fetchone()
-    return result is not None and result[0]
+def _reservar_envio_enquetes(engine, hoje: str) -> bool:
+    """Reserva atomicamente o envio de enquetes para a data. Retorna True se ganhou a corrida.
 
-
-def _marcar_enviado(engine, hoje: str) -> None:
+    Garante que apenas uma execução concorrente envia as enquetes, mesmo que duas tasks
+    cheguem aqui simultaneamente. O UPDATE só afeta a linha se enquetes_enviadas ainda
+    for FALSE, então a primeira transação a commitar ganha e as outras recebem rowcount=0.
+    """
     with engine.begin() as conn:
         conn.execute(text("""
-            INSERT INTO bot_execucoes (data_execucao, enquetes_enviadas)
-            VALUES (:d, TRUE)
-            ON CONFLICT (data_execucao) DO UPDATE SET enquetes_enviadas = TRUE
+            INSERT INTO bot_execucoes (data_execucao)
+            VALUES (:d)
+            ON CONFLICT (data_execucao) DO NOTHING
         """), {"d": hoje})
+        result = conn.execute(text("""
+            UPDATE bot_execucoes
+            SET enquetes_enviadas = TRUE
+            WHERE data_execucao = :d AND enquetes_enviadas = FALSE
+        """), {"d": hoje})
+    return result.rowcount == 1
 
 
 def _salvar_poll_message_id(engine, game_id: str, message_id: int) -> None:
@@ -95,8 +98,8 @@ def main():
     engine = create_engine(DB_URL)
     hoje = datetime.now().strftime('%Y-%m-%d')
 
-    if _ja_enviou_hoje(engine, hoje):
-        logger.info(f"Enquetes de {hoje} já foram enviadas — nada a fazer.")
+    if not _reservar_envio_enquetes(engine, hoje):
+        logger.info(f"Enquetes de {hoje} já foram enviadas por outra execução, pulando.")
         return
 
     query = text("""
@@ -134,8 +137,7 @@ def main():
             _salvar_poll_message_id(engine, row['game_id'], message_id)
             logger.info(f"Enquete enviada: {pergunta} (message_id={message_id})")
 
-    _marcar_enviado(engine, hoje)
-    logger.info("Todas as enquetes enviadas e execução registrada.")
+    logger.info("Todas as enquetes enviadas.")
 
 
 if __name__ == "__main__":

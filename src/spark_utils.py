@@ -6,7 +6,7 @@ def get_spark_session(app_name: str) -> SparkSession:
     """Retorna uma SparkSession configurada com suporte a Delta Lake.
 
     configure_spark_with_delta_pip injeta os JARs do Delta automaticamente
-    quando delta-spark está instalado via pip — sem precisar baixar JARs manualmente.
+    quando delta-spark está instalado via pip, sem precisar baixar JARs manualmente.
     getOrCreate reutiliza a sessão se já existir na JVM corrente.
     """
     builder = (
