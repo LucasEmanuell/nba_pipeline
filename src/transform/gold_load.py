@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SILVER_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule_enriched")
+SILVER_SCHEDULE_DIR = os.path.join(BASE_DIR, "data", "silver", "schedule")
 SILVER_BOXSCORE_DIR = os.path.join(BASE_DIR, "data", "silver", "boxscores")
 SILVER_PLAYER_DIR = os.path.join(BASE_DIR, "data", "silver", "player_stats")
 

@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from pyspark.sql.functions import (
     col, explode, to_timestamp, expr,
-    substring, when, regexp_extract, lit,
+    substring, when, regexp_extract, lit, get_json_object,
 )
 
 from src.spark_utils import get_spark_session
@@ -48,7 +48,11 @@ def transform_schedule_bronze_to_silver():
         col("game.homeTeam.teamCity").alias("home_team_city"),
         col("game.awayTeam.teamName").alias("away_team_name"),
         col("game.awayTeam.teamCity").alias("away_team_city"),
-        expr("get(game.broadcasters.nationalTvBroadcasters, 0).broadcasterDisplay").alias("us_broadcaster"),
+        # cast para string antes do get_json_object é necessário pois o JSON regional _11
+        # pode inferir o campo de broadcaster como STRING, ArrayType(StringType) ou
+        # ArrayType(StructType) dependendo dos dados — cast normaliza tudo.
+        get_json_object(col("game.broadcasters.nationalTvBroadcasters").cast("string"), "$[0].broadcasterDisplay").alias("us_broadcaster"),
+        get_json_object(col("game.broadcasters.intlTvBroadcasters").cast("string"), "$[0].broadcasterDisplay").alias("brazil_broadcaster"),
         col("game.seriesText").alias("series_text"),
         # gameCode formato "YYYYMMDD/AWYHME" — split pega a parte dos tricodes
         expr("split(game.gameCode, '/')[1]").alias("game_code_teams"),
@@ -108,6 +112,7 @@ def transform_schedule_bronze_to_silver():
         "away_team_city",
         "away_team_name",
         "us_broadcaster",
+        "brazil_broadcaster",
         "home_series_wins",
         "away_series_wins",
     )
@@ -141,7 +146,7 @@ def transform_schedule_bronze_to_silver():
 
     output_path = os.path.join(SILVER_DIR, hoje_str)
     logger.info(f"Salvando Silver Schedule em Delta: {output_path}")
-    df_silver.write.format("delta").mode("overwrite").save(output_path)
+    df_silver.write.format("delta").mode("overwrite").option("overwriteSchema", "true").save(output_path)
     df_silver.unpersist()
 
     spark.stop()

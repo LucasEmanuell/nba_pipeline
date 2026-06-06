@@ -18,6 +18,7 @@ NBA_HEADERS = {
 # URL primária usa sufixo de versão; fallback é a canonical sem versão.
 # A NBA às vezes atualiza o sufixo (_1, _2...) sem aviso — ter o fallback evita outage silencioso.
 SCHEDULE_URLS = [
+    "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_11.json",  # region=11 Brazil — tem intlTvBroadcasters
     "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json",
     "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json",
 ]

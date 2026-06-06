@@ -9,13 +9,12 @@ Pipeline de dados end-to-end que coleta estatísticas da NBA em tempo real, proc
 ```mermaid
 graph TD
     subgraph EXT["Extração · Bronze"]
-        A1["NBA API\nschedule + scores"]
-        A2["Jumper.news\nTV Brasil"]
+        A1["NBA CDN\nschedule + broadcaster BR"]
         A3["NBA API\nboxscores"]
     end
 
     subgraph SIL["Transformação · Silver / Delta Lake"]
-        B1["schedule_enriched\ncalendário + transmissão"]
+        B1["schedule\ncalendário + transmissão BR"]
         B2["boxscores\nresultado por jogo"]
         B3["player_stats\nstats individuais"]
     end
@@ -33,7 +32,6 @@ graph TD
     end
 
     A1 --> B1
-    A2 --> B1
     A3 --> B2
     A3 --> B3
     B1 --> C1
@@ -55,7 +53,7 @@ graph TD
 | **delta-rs (deltalake)** | Leitura de Delta tables em pandas sem overhead de JVM |
 | **PostgreSQL** | Camada Gold em Star Schema para queries analíticas |
 | **SQLAlchemy** | Upsert idempotente via ON CONFLICT DO UPDATE |
-| **Python / Requests** | Extração da API NBA e scraping do Jumper.news |
+| **Python / Requests** | Extração da API e CDN da NBA |
 | **python-telegram-bot** | Envio de resultados e enquetes ao grupo do Telegram |
 | **Docker Compose** | Ambiente reproduzível com Airflow, Postgres e Workers |
 | **uv** | Gerenciamento de dependências Python |
@@ -149,11 +147,9 @@ Roda diariamente às 05h00 UTC.
 ```mermaid
 graph LR
     ES[extract_schedule] --> SS[silver_schedule]
-    EJ[extract_jumper] --> SJ[silver_jumper]
-    SS & SJ --> SE[enrich_schedule]
     EB[extract_boxscores] --> SB[silver_boxscores]
     EB --> SP[silver_player_stats]
-    SE & SB & SP --> GL[load_gold]
+    SS & SB & SP --> GL[load_gold]
     GL --> BR[bot_resultados]
     BR --> BE[bot_enquetes]
 ```
