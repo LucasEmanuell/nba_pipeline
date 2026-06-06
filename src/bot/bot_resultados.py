@@ -27,6 +27,24 @@ def _send_message(text_body: str) -> None:
         logger.error(f"Falha ao enviar mensagem: {response.text}")
 
 
+def _ja_enviou_resultados(engine, data_jogo: str) -> bool:
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT resultados_enviados FROM bot_execucoes WHERE data_execucao = :d"),
+            {"d": data_jogo},
+        ).fetchone()
+    return result is not None and result[0]
+
+
+def _marcar_resultados_enviados(engine, data_jogo: str) -> None:
+    with engine.begin() as conn:
+        conn.execute(text("""
+            INSERT INTO bot_execucoes (data_execucao, resultados_enviados)
+            VALUES (:d, TRUE)
+            ON CONFLICT (data_execucao) DO UPDATE SET resultados_enviados = TRUE
+        """), {"d": data_jogo})
+
+
 def main():
     if not all([TELEGRAM_TOKEN, CHAT_ID, DB_URL]):
         logger.error("Variáveis de ambiente ausentes (BOT_TOKEN, GROUP_ID, DB_URL)")
@@ -34,6 +52,10 @@ def main():
 
     engine = create_engine(DB_URL)
     ontem = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+
+    if _ja_enviou_resultados(engine, ontem):
+        logger.info(f"Resultados de {ontem} já foram enviados — pulando.")
+        return
 
     logger.info(f"Buscando resultados finalizados de {ontem}...")
 
@@ -69,6 +91,7 @@ def main():
 
     mensagem = f"🏀 *Resultados NBA — {ontem}*\n\n" + "\n\n".join(linhas)
     _send_message(mensagem)
+    _marcar_resultados_enviados(engine, ontem)
     logger.info(f"{len(df)} resultados enviados.")
 
 

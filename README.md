@@ -81,7 +81,7 @@ Star Schema com quatro tabelas:
 | `fact_nba_boxscores` | Resultado por jogo com placar e time vencedor |
 | `fact_player_game_stats` | Stats individuais por jogo: pts, reb, ast, stl, blk, +/- e mais 15 métricas |
 
-Temporada 2025-26 completa: **1.395 jogos**, **683 jogadores**, **30.740 registros** de player stats.
+Temporada 2025-26 completa: **1.402 jogos**, **683 jogadores**, **30.740 registros** de player stats.
 
 ```mermaid
 erDiagram
@@ -90,7 +90,6 @@ erDiagram
         timestamp game_datetime_utc
         string home_team_name
         string away_team_name
-        string arena
         string brazil_broadcaster
         string game_type
         int home_series_wins
@@ -142,7 +141,8 @@ erDiagram
 
 ### `nba_etl_daily_pipeline`
 
-Roda diariamente às 05h00 UTC.
+Roda diariamente às 08h00 UTC (05h00 BRT). Janela escolhida para garantir que jogos
+com tip-off à 01h00 BRT (~03h30 de duração) já tenham boxscores finalizados na CDN da NBA.
 
 ```mermaid
 graph LR
@@ -245,7 +245,7 @@ nba_pipeline/
 │   ├── nba_backfill_dag.py       # Backfill da temporada atual
 │   └── nba_polls_stopper_dag.py  # Fechamento de enquetes
 ├── src/
-│   ├── extract/                  # Extração Bronze (API + scraping)
+│   ├── extract/                  # Extração Bronze (CDN + API)
 │   ├── transform/                # Silver (PySpark/Delta) e Gold (PostgreSQL)
 │   └── bot/                      # Bots de resultados e enquetes
 ├── docker-compose.yml

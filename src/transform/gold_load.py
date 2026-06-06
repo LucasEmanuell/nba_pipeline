@@ -57,9 +57,13 @@ def _ensure_bot_execucoes(engine) -> None:
             CREATE TABLE IF NOT EXISTS bot_execucoes (
                 data_execucao DATE PRIMARY KEY,
                 enquetes_enviadas BOOLEAN DEFAULT FALSE,
+                resultados_enviados BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT NOW()
             )
         """))
+        conn.execute(text(
+            "ALTER TABLE bot_execucoes ADD COLUMN IF NOT EXISTS resultados_enviados BOOLEAN DEFAULT FALSE"
+        ))
 
 
 def _set_primary_key(engine, table_name: str, pk_column: str) -> None:
