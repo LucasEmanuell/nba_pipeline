@@ -247,11 +247,33 @@ nba_pipeline/
 ├── src/
 │   ├── extract/                  # Extração Bronze (CDN + API)
 │   ├── transform/                # Silver (PySpark/Delta) e Gold (PostgreSQL)
+│   │   └── derivations.py        # Funções puras de derivação (game_type, series_wins)
 │   └── bot/                      # Bots de resultados e enquetes
+├── tests/
+│   ├── conftest.py               # Fixture de conexão com o banco
+│   ├── test_data_quality.py      # 16 testes de contrato contra o Gold
+│   └── test_derivations.py       # 12 testes unitários de lógica de negócio
 ├── docker-compose.yml
 ├── Dockerfile
 └── pyproject.toml
 ```
+
+---
+
+## Testes
+
+```bash
+# Testes unitários (sem banco, sem Spark)
+uv run pytest tests/test_derivations.py -v
+
+# Testes de qualidade de dados contra o Gold (requer Docker rodando)
+uv run pytest tests/test_data_quality.py -v
+
+# Suite completa
+uv run pytest tests/ -v
+```
+
+Os testes de qualidade usam `DB_URL_EXTERNAL` do `.env` — configure antes de rodar.
 
 ---
 
@@ -263,6 +285,6 @@ nba_pipeline/
 - [x] Fase 4 — Data quality checks na Silver
 - [x] Fase 5 — Backfill da temporada 2025-26
 - [x] Fase 6 — Stats individuais de jogadores (Star Schema)
-- [ ] Fase 7 — Testes automatizados
+- [x] Fase 7 — Testes automatizados (unitários + contrato Gold)
 - [ ] Fase 8 — Dashboard BI (Metabase + PostgreSQL existente)
 - [ ] Fase 9 — Stats avançados (PER, TS%, usage rate)

@@ -2,12 +2,31 @@ import json
 import os
 import logging
 from datetime import datetime
-from pyspark.sql.functions import (
-    col, explode, to_timestamp, expr,
-    substring, when, regexp_extract, lit, get_json_object,
-)
+from pyspark.sql.functions import col, explode, to_timestamp, expr, get_json_object, udf
+from pyspark.sql.types import StringType, IntegerType
 
 from src.spark_utils import get_spark_session
+from src.transform.derivations import derive_game_type, parse_series_wins
+
+_game_type_udf = udf(derive_game_type, StringType())
+
+
+def _home_wins(series_text, home_tricode, away_tricode, game_type):
+    if game_type != "playoff":
+        return None
+    wins, _ = parse_series_wins(series_text, home_tricode, away_tricode)
+    return wins
+
+
+def _away_wins(series_text, home_tricode, away_tricode, game_type):
+    if game_type != "playoff":
+        return None
+    _, wins = parse_series_wins(series_text, home_tricode, away_tricode)
+    return wins
+
+
+_home_wins_udf = udf(_home_wins, IntegerType())
+_away_wins_udf = udf(_away_wins, IntegerType())
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -58,47 +77,15 @@ def transform_schedule_bronze_to_silver():
         expr("split(game.gameCode, '/')[1]").alias("game_code_teams"),
     ).filter(col("game_id").isNotNull())
 
-    # game_type derivado do prefixo do game_id, convenção da NBA:
-    # 001 pré-temporada, 002 temporada regular, 004 playoffs, 005 play-in
-    df_typed = df_extracted.withColumn(
-        "game_type",
-        when(substring(col("game_id"), 1, 3) == "002", "regular")
-        .when(substring(col("game_id"), 1, 3) == "004", "playoff")
-        .when(substring(col("game_id"), 1, 3) == "005", "play-in")
-        .otherwise("preseason"),
-    )
+    df_typed = df_extracted.withColumn("game_type", _game_type_udf(col("game_id")))
 
-    # Series wins: só para jogos de playoff.
-    # Formatos do seriesText: "NYK leads 3-1" | "Series tied 2-2" | "OKC wins 4-0"
-    # Quando não há texto (Game 1, série não iniciada), retorna NULL.
-    series_leader = regexp_extract(col("series_text"), r"^(\w+)\s+(?:leads|wins)", 1)
-    score_a = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 1).cast("int")
-    score_b = regexp_extract(col("series_text"), r"(\d+)-(\d+)", 2).cast("int")
-
-    away_tricode = col("game_code_teams").substr(1, 3)
     home_tricode = col("game_code_teams").substr(4, 3)
-
-    is_playoff = col("game_type") == "playoff"
-    is_tied = series_leader == ""  # regexp_extract retorna "" quando não há match
+    away_tricode = col("game_code_teams").substr(1, 3)
 
     df_with_series = (
         df_typed
-        .withColumn(
-            "home_series_wins",
-            when(~is_playoff, lit(None).cast("int"))
-            .when(is_tied & score_a.isNotNull(), score_a)
-            .when(series_leader == home_tricode, score_a)
-            .when(series_leader == away_tricode, score_b)
-            .otherwise(lit(None).cast("int")),
-        )
-        .withColumn(
-            "away_series_wins",
-            when(~is_playoff, lit(None).cast("int"))
-            .when(is_tied & score_a.isNotNull(), score_a)
-            .when(series_leader == away_tricode, score_a)
-            .when(series_leader == home_tricode, score_b)
-            .otherwise(lit(None).cast("int")),
-        )
+        .withColumn("home_series_wins", _home_wins_udf(col("series_text"), home_tricode, away_tricode, col("game_type")))
+        .withColumn("away_series_wins", _away_wins_udf(col("series_text"), home_tricode, away_tricode, col("game_type")))
     )
 
     # select final define o schema da Silver, colunas intermediárias ficam de fora
