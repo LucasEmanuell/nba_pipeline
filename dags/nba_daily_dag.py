@@ -100,6 +100,7 @@ with DAG(
     #                    └──► silver_player ───┘
     #
     task_extract_schedule >> task_silver_schedule >> task_load_gold
+    task_extract_schedule >> task_extract_boxscores
     task_extract_boxscores >> task_silver_boxscores >> task_load_gold
     task_extract_boxscores >> task_silver_player_stats >> task_load_gold
     task_load_gold >> task_send_results >> task_send_polls

@@ -147,7 +147,8 @@ com tip-off à 01h00 BRT (~03h30 de duração) já tenham boxscores finalizados 
 ```mermaid
 graph LR
     ES[extract_schedule] --> SS[silver_schedule]
-    EB[extract_boxscores] --> SB[silver_boxscores]
+    ES --> EB[extract_boxscores]
+    EB --> SB[silver_boxscores]
     EB --> SP[silver_player_stats]
     SS & SB & SP --> GL[load_gold]
     GL --> BR[bot_resultados]
