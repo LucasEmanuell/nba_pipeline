@@ -55,12 +55,6 @@ def main():
     engine = create_engine(DB_URL)
     ontem = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
-    if not _reservar_envio_resultados(engine, ontem):
-        logger.info(f"Resultados de {ontem} já foram enviados por outra execução, pulando.")
-        return
-
-    logger.info(f"Buscando resultados finalizados de {ontem}...")
-
     # DATE AT TIME ZONE garante que jogos que começam às 23h BRT (02h UTC do dia seguinte)
     # sejam contados como pertencentes ao dia brasileiro correto.
     query = text("""
@@ -78,8 +72,14 @@ def main():
         df = pd.read_sql(query, conn, params={"ontem": ontem})
 
     if df.empty:
-        logger.info("Nenhum resultado finalizado para ontem.")
+        logger.info(f"Nenhum resultado finalizado para {ontem}.")
         return
+
+    if not _reservar_envio_resultados(engine, ontem):
+        logger.info(f"Resultados de {ontem} já foram enviados por outra execução, pulando.")
+        return
+
+    logger.info(f"Enviando {len(df)} resultado(s) de {ontem}...")
 
     linhas = []
     for _, row in df.iterrows():
@@ -93,7 +93,7 @@ def main():
 
     mensagem = f"🏀 *Resultados NBA — {ontem}*\n\n" + "\n\n".join(linhas)
     _send_message(mensagem)
-    logger.info(f"{len(df)} resultados enviados.")
+    logger.info(f"{len(df)} resultado(s) enviado(s).")
 
 
 if __name__ == "__main__":

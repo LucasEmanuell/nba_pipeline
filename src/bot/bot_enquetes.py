@@ -98,10 +98,6 @@ def main():
     engine = create_engine(DB_URL)
     hoje = datetime.now().strftime('%Y-%m-%d')
 
-    if not _reservar_envio_enquetes(engine, hoje):
-        logger.info(f"Enquetes de {hoje} já foram enviadas por outra execução, pulando.")
-        return
-
     query = text("""
         SELECT
             game_id,
@@ -120,7 +116,11 @@ def main():
         df_jogos = pd.read_sql(query, conn, params={"hoje": hoje})
 
     if df_jogos.empty:
-        logger.info("Nenhum jogo encontrado para hoje.")
+        logger.info(f"Nenhum jogo encontrado para {hoje}.")
+        return
+
+    if not _reservar_envio_enquetes(engine, hoje):
+        logger.info(f"Enquetes de {hoje} já foram enviadas por outra execução, pulando.")
         return
 
     logger.info(f"{len(df_jogos)} jogos encontrados para {hoje}")
