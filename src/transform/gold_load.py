@@ -41,6 +41,7 @@ def _ensure_schedule_schema(engine) -> None:
         "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS home_series_wins INTEGER",
         "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS away_series_wins INTEGER",
         "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS poll_message_id BIGINT",
+        "ALTER TABLE dim_nba_schedule ADD COLUMN IF NOT EXISTS is_cancelled BOOLEAN DEFAULT FALSE",
     ]
     with engine.begin() as conn:
         for sql in new_columns:
@@ -74,6 +75,36 @@ def _set_primary_key(engine, table_name: str, pk_column: str) -> None:
             pass  # chave já existe
 
 
+def _cancel_phantom_playoff_games(engine, current_game_ids: set) -> None:
+    """Detecta e cancela placeholders de playoff que nunca serão disputados.
+
+    Estratégia 1: game_ids removidos do JSON da NBA (série encerrou antes do previsto).
+    Estratégia 2 (defense-in-depth): série encerrada detectada via home/away_series_wins >= 4.
+    """
+    with engine.begin() as conn:
+        rows = conn.execute(text("""
+            SELECT game_id FROM dim_nba_schedule
+            WHERE game_type = 'playoff' AND game_status != 3 AND is_cancelled = FALSE
+        """)).fetchall()
+
+        phantom_ids = [r[0] for r in rows if r[0] not in current_game_ids]
+        for gid in phantom_ids:
+            conn.execute(
+                text("UPDATE dim_nba_schedule SET is_cancelled = TRUE WHERE game_id = :gid"),
+                {"gid": gid},
+            )
+
+        r2 = conn.execute(text("""
+            UPDATE dim_nba_schedule SET is_cancelled = TRUE
+            WHERE game_type = 'playoff' AND game_status != 3 AND is_cancelled = FALSE
+              AND (home_series_wins >= 4 OR away_series_wins >= 4)
+        """))
+
+    total = len(phantom_ids) + r2.rowcount
+    if total > 0:
+        logger.info(f"Cancelados {total} placeholder(s) de playoff (série encerrada)")
+
+
 def _upsert(engine, df: pd.DataFrame, table_name: str, pk_column: str) -> int:
     metadata = MetaData()
     table = Table(table_name, metadata, autoload_with=engine)
@@ -105,6 +136,7 @@ def load_silver_to_gold(target_date: str) -> None:
 
         count = _upsert(engine, df_schedule, 'dim_nba_schedule', 'game_id')
         logger.info(f"dim_nba_schedule: {count} registros upsertados para {target_date}")
+        _cancel_phantom_playoff_games(engine, set(df_schedule['game_id'].tolist()))
     else:
         logger.warning(f"Silver Schedule não encontrado para {target_date}, pulando")
 

@@ -109,6 +109,7 @@ def main():
         FROM dim_nba_schedule
         WHERE DATE(game_datetime_utc AT TIME ZONE 'America/Sao_Paulo') = :hoje
           AND poll_message_id IS NULL
+          AND is_cancelled = FALSE
         ORDER BY game_datetime_utc
     """)
 

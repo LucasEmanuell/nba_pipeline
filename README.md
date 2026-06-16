@@ -1,6 +1,6 @@
 # NBA Data Pipeline — Airflow · PySpark · Delta Lake · PostgreSQL
 
-Pipeline de dados end-to-end que coleta estatísticas da NBA em tempo real, processa em camadas Bronze → Silver → Gold e entrega resultados automaticamente via bot no Telegram. Os dados estruturados em Star Schema no PostgreSQL estão prontos para análise em qualquer ferramenta de BI.
+Pipeline de dados end-to-end que coleta estatísticas da NBA diariamente, processa em camadas Bronze → Silver → Gold e entrega resultados automaticamente via bot no Telegram. Os dados estruturados em Star Schema no PostgreSQL estão prontos para análise em qualquer ferramenta de BI.
 
 ---
 
@@ -81,7 +81,7 @@ Star Schema com quatro tabelas:
 | `fact_nba_boxscores` | Resultado por jogo com placar e time vencedor |
 | `fact_player_game_stats` | Stats individuais por jogo: pts, reb, ast, stl, blk, +/- e mais 15 métricas |
 
-Temporada 2025-26 completa: **1.402 jogos**, **683 jogadores**, **30.740 registros** de player stats.
+Temporada 2025-26 completa (Spurs x Knicks decidida em 5 jogos): **1.400 jogos com resultado**, **683 jogadores**, **30.841 registros** de player stats. Os 2 jogos restantes no calendário (Finals 6 e 7) são placeholders da NBA que nunca foram disputados.
 
 ```mermaid
 erDiagram
@@ -94,14 +94,16 @@ erDiagram
         string game_type
         int home_series_wins
         int away_series_wins
+        bigint poll_message_id
+        boolean is_cancelled
     }
 
     fact_nba_boxscores {
         string game_id PK
         int home_score
         int away_score
-        string winner_team
-        int winner_team_id
+        string winner
+        boolean is_final
     }
 
     dim_players {
@@ -173,7 +175,7 @@ Roda a cada 10 minutos. Fecha enquetes do Telegram de jogos que já terminaram.
 ## Bot Telegram
 
 O bot publica automaticamente no grupo configurado:
-- **Resultados**: placar final, time vencedor e destaques do jogo
+- **Resultados**: placar final e time vencedor de cada jogo
 - **Enquetes**: votação sobre o vencedor antes do jogo começar
 
 As credenciais (`BOT_TOKEN`, `GROUP_ID`) ficam no `.env` local, nunca commitadas.
